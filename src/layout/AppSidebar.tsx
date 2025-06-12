@@ -16,6 +16,7 @@ import {
     UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import routes from "../config/routes";
 
 type NavItem = {
     name: string;
@@ -32,7 +33,7 @@ const navItems: NavItem[] = [
     },
     {
         icon: <GridIcon />,
-        name: "Store",
+        name: "Quản lý cửa hàng",
         path: "/store",
     },
     {

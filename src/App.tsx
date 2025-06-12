@@ -54,7 +54,7 @@ export default function App() {
                                 element={<BasicTables />}
                             />
                             {/* Store */}
-                            <Route path="/store" element={<Store />} />
+                            <Route path={routes.store} element={<Store />} />
                             {/* Human Resources Management */}
                             <Route
                                 path={routes.ce}
