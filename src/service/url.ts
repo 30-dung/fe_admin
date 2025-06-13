@@ -1,3 +1,4 @@
+import { C } from "node_modules/@fullcalendar/core/internal-common";
 
 const url = {
     BASE_URL: "http://localhost:9090/api/",
@@ -53,7 +54,14 @@ const url = {
     GET_BY_EMPLOYEE: 'appointments/employee/{email}', // GET: Lấy lịch hẹn theo nhân viên
     CONFIRM: 'appointments/${id}/confirm',        // PATCH: Nhân viên xác nhận lịch hẹn
     CANCEL: 'appointments/${id}/cancel',     // PATCH: Khách hoặc nhân viên huỷ lịch hẹn
-    }
+    },
+    SERVICE: {
+        GET_ALL: "services", // Lấy danh sách tất cả dịch vụ.
+        GET_BY_ID: "services/${id}",
+        CREATE: "services", // Tạo mới một dịch vụ.
+        UPDATE: "services/${id}", // Cập nhật thông tin dịch vụ.
+        DELETE: "services/${id}", // Xóa một dịch vụ.
+    },
 
 };
 

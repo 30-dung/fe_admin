@@ -33,12 +33,15 @@ const navItems: NavItem[] = [
     path: "/",
     roles: ["ROLE_ADMIN", "ROLE_EMPLOYEE"],
   },
-  {
-    icon: <GridIcon />,
-    name: "Cửa hàng",
-    path: "/store",
-    roles: ["ROLE_ADMIN"],
-  },
+   {
+        icon: <GridIcon />,
+        name: "Quản lý cửa hàng",
+        roles: ["ROLE_ADMIN"],
+        subItems: [
+            { name: "Cửa hàng", path: "/store", pro: false, roles: ["ROLE_ADMIN"] },
+            { name: "Dịch vụ", path: "/store-service", pro: false, roles: ["ROLE_ADMIN"] },
+        ],
+    },
   {
     icon: <CalenderIcon />,
     name: "Lịch",
@@ -82,6 +85,14 @@ const navItems: NavItem[] = [
       { name: "Tạo nhân viên", path: "/create-employee", pro: false, roles: ["ROLE_ADMIN"] },
     ],
   },
+  {
+        name: "Quản lý dịch vụ",
+        icon: <GridIcon />,
+        roles: ["ROLE_ADMIN"],
+        subItems: [
+            { name: "Dịch vụ", path: "/service-manager", pro: false, roles: ["ROLE_ADMIN"] },
+        ],
+    },
 ];
 
 interface AppSidebarProps {
