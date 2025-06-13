@@ -6,7 +6,7 @@ interface InputProps {
   id?: string;
   name?: string;
   placeholder?: string;
-  value?: string | number;
+  value?: string | number|Date;
   onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   className?: string;
   min?: string;
@@ -53,7 +53,11 @@ const Input: FC<InputProps> = ({
         id={id}
         name={name}
         placeholder={placeholder}
-        value={value}
+        value={
+          value instanceof Date
+            ? value.toISOString().slice(0, type === "date" ? 10 : undefined)
+            : value
+        }
         onChange={onChange}
         min={min}
         max={max}
