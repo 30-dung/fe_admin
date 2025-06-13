@@ -42,50 +42,46 @@ const navItems: NavItem[] = [
             { name: "Dịch vụ", path: "/store-service", pro: false, roles: ["ROLE_ADMIN"] },
         ],
     },
-  {
-    icon: <CalenderIcon />,
-    name: "Lịch",
-    path: "/calendar",
-    roles: ["ROLE_EMPLOYEE"],
-  },
-  {
-    icon: <UserCircleIcon />,
-    name: "Nhân viên",
-    path: "/profile",
-    roles: ["ROLE_EMPLOYEE"],
-  },
-  // {
-  //   name: "Biểu mẫu",
-  //   icon: <ListIcon />,
-  //   roles: ["ROLE_ADMIN"],
-  //   subItems: [
-  //     { name: "Thành phần biểu mẫu", path: "/form-elements", pro: false, roles: ["ROLE_ADMIN"] },
-  //   ],
-  // },
-  {
-    name: "Cuộc hẹn",
-    icon: <TableIcon />,
-    path: "/basic-tables",
-    roles: ["ROLE_EMPLOYEE"],
-  },
-  {
-    name: "Trang",
-    icon: <PageIcon />,
-    roles: ["ROLE_ADMIN"],
-    subItems: [
-      { name: "Trang trống", path: "/blank", pro: false, roles: ["ROLE_ADMIN"] },
-      { name: "Lỗi 404", path: "/error-404", pro: false, roles: ["ROLE_ADMIN"] },
-    ],
-  },
-  {
-    name: "Quản lý nhân sự",
-    icon: <GridIcon />,
-    roles: ["ROLE_ADMIN"],
-    subItems: [
-      { name: "Tạo nhân viên", path: "/create-employee", pro: false, roles: ["ROLE_ADMIN"] },
-    ],
-  },
-  {
+    {
+        icon: <CalenderIcon />,
+        name: "Calendar",
+        path: "/calendar",
+    },
+    {
+        icon: <UserCircleIcon />,
+        name: "Employee",
+        path: "/profile",
+    },
+
+    {
+        name: "Forms",
+        icon: <ListIcon />,
+        subItems: [
+            { name: "Form Elements", path: "/form-elements", pro: false },
+        ],
+    },
+    {
+        name: "Tables",
+        icon: <TableIcon />,
+        subItems: [{ name: "appointments", path: "/basic-tables", pro: false }],
+    },
+
+    {
+        name: "Pages",
+        icon: <PageIcon />,
+        subItems: [
+            { name: "Blank Page", path: "/blank", pro: false },
+            { name: "404 Error", path: "/error-404", pro: false },
+        ],
+    },
+    {
+        name: "Quản lý nhân sự",
+        icon: <GridIcon />,
+        subItems: [
+            { name: "Tạo nhân viên", path: "/create-employee", pro: false },
+        ],
+    },
+    {
         name: "Quản lý dịch vụ",
         icon: <GridIcon />,
         roles: ["ROLE_ADMIN"],
