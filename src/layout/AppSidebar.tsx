@@ -54,29 +54,14 @@ const navItems: NavItem[] = [
     path: "/profile",
     roles: ["ROLE_EMPLOYEE"],
   },
-  // {
-  //   name: "Biểu mẫu",
-  //   icon: <ListIcon />,
-  //   roles: ["ROLE_ADMIN"],
-  //   subItems: [
-  //     { name: "Thành phần biểu mẫu", path: "/form-elements", pro: false, roles: ["ROLE_ADMIN"] },
-  //   ],
-  // },
+  
   {
     name: "Cuộc hẹn",
     icon: <TableIcon />,
     path: "/basic-tables",
     roles: ["ROLE_EMPLOYEE"],
   },
-  {
-    name: "Trang",
-    icon: <PageIcon />,
-    roles: ["ROLE_ADMIN"],
-    subItems: [
-      { name: "Trang trống", path: "/blank", pro: false, roles: ["ROLE_ADMIN"] },
-      { name: "Lỗi 404", path: "/error-404", pro: false, roles: ["ROLE_ADMIN"] },
-    ],
-  },
+
   {
     name: "Quản lý nhân sự",
     icon: <GridIcon />,
