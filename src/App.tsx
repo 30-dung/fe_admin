@@ -38,7 +38,7 @@ export default function App() {
                         }
                     >
                         <Route element={<AppLayout />}>
-                            <Route index path="/homes" element={<Homes />} />
+                            <Route index path="/" element={<Homes />} />
                             {/* Others Page */}
                             <Route path="/profile" element={<UserProfiles />} />
                             <Route path="/calendar" element={<Calendar />} />

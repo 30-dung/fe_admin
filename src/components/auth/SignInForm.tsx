@@ -43,7 +43,7 @@ interface EmployeeProfileResponse {
 export default function SignInForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const returnTo = searchParams.get("returnTo") || "/homes";
+  const returnTo = searchParams.get("returnTo") || "/";
 
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
