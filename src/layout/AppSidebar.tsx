@@ -34,7 +34,10 @@ const navItems: NavItem[] = [
     {
         icon: <GridIcon />,
         name: "Quản lý cửa hàng",
-        path: "/store",
+        subItems: [
+            { name: "Cửa hàng", path: "/store", pro: false },
+            { name: "Dịch vụ", path: "/store-service", pro: false },
+        ],
     },
     {
         icon: <CalenderIcon />,
@@ -73,6 +76,13 @@ const navItems: NavItem[] = [
         icon: <GridIcon />,
         subItems: [
             { name: "Tạo nhân viên", path: "/create-employee", pro: false },
+        ],
+    },
+    {
+        name: "Quản lý dịch vụ",
+        icon: <GridIcon />,
+        subItems: [
+            { name: "Dịch vụ", path: "/service-manager", pro: false },
         ],
     },
 ];

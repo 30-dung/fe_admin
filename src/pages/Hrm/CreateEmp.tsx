@@ -9,12 +9,12 @@ import {
     Eye,
     EyeOff,
 } from "lucide-react";
-import url from "../../service/url";
-import axios from "../../service/api";
-import PageBreadcrumb from "../../components/common/PageBreadCrumb";
-import ComponentCard from "../../components/common/ComponentCard";
-import Label from "../../components/form/Label";
-import Input from "../../components/form/input/InputField";
+import url from "service/url";
+import axios from "service/api";
+import PageBreadcrumb from "components/common/PageBreadCrumb";
+import ComponentCard from "components/common/ComponentCard";
+import Label from "components/form/Label";
+import Input from "components/form/input/InputField";
 
 // Types based on backend
 interface EmployeeRequestDTO {
@@ -63,9 +63,7 @@ const CreateEmployeeForm = () => {
 
     const [roles, setRoles] = useState<Role[]>([
         { id: 1, name: "ADMIN", description: "Quản trị viên" },
-        { id: 2, name: "MANAGER", description: "Quản lý" },
         { id: 3, name: "EMPLOYEE", description: "Nhân viên" },
-        { id: 4, name: "CASHIER", description: "Thu ngân" },
     ]);
 
     const [showPassword, setShowPassword] = useState(false);
@@ -523,19 +521,7 @@ const CreateEmployeeForm = () => {
                     </div>
 
                     {/* Salary Information Notice */}
-                    <div className=" border border-blue-200 p-4 rounded-lg">
-                        <h3 className="text-sm font-medium text-blue-800 mb-2">
-                            Thông tin lương mặc định
-                        </h3>
-                        <div className="text-sm text-blue-700 space-y-1">
-                            <p>• Lương cơ bản: 10,000,000 VND</p>
-                            <p>• Tỷ lệ hoa hồng: 5%</p>
-                            <p>• Loại lương: Lương cố định + hoa hồng</p>
-                            <p className="text-xs text-blue-600 mt-2">
-                                *Có thể chỉnh sửa sau khi tạo tài khoản
-                            </p>
-                        </div>
-                    </div>
+                    
 
                     {/* Submit Button */}
                     <div className="flex justify-end space-x-3">
