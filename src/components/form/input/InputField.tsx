@@ -2,20 +2,20 @@ import type React from "react";
 import type { FC } from "react";
 
 interface InputProps {
-  type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
-  id?: string;
-  name?: string;
-  placeholder?: string;
-  value?: string | number|Date;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  className?: string;
-  min?: string;
-  max?: string;
-  step?: number;
-  disabled?: boolean;
-  success?: boolean;
-  error?: boolean;
-  hint?: string;
+    type?: "text" | "number" | "email" | "password" | "date" | "time" | string;
+    id?: string;
+    name?: string;
+    placeholder?: string;
+    value?: string | number | Date;
+    onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+    className?: string;
+    min?: string;
+    max?: string;
+    step?: number;
+    disabled?: boolean;
+    success?: boolean;
+    error?: boolean;
+    hint?: string;
 }
 
 const Input: FC<InputProps> = ({
@@ -46,25 +46,27 @@ const Input: FC<InputProps> = ({
     inputClasses += ` bg-transparent text-gray-800 border-gray-300 focus:border-brand-300 focus:ring-brand-500/20 dark:border-gray-700 dark:text-white/90  dark:focus:border-brand-800`;
   }
 
-  return (
-    <div className="relative">
-      <input
-        type={type}
-        id={id}
-        name={name}
-        placeholder={placeholder}
-        value={
-          value instanceof Date
-            ? value.toISOString().slice(0, type === "date" ? 10 : undefined)
-            : value
-        }
-        onChange={onChange}
-        min={min}
-        max={max}
-        step={step}
-        disabled={disabled}
-        className={inputClasses}
-      />
+    return (
+        <div className="relative">
+            <input
+                type={type}
+                id={id}
+                name={name}
+                placeholder={placeholder}
+                value={
+                    value instanceof Date
+                        ? value
+                              .toISOString()
+                              .slice(0, type === "date" ? 10 : undefined)
+                        : value
+                }
+                onChange={onChange}
+                min={min}
+                max={max}
+                step={step}
+                disabled={disabled}
+                className={inputClasses}
+            />
 
       {hint && (
         <p
