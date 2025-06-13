@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from "react";
 import {
   Table,
@@ -29,13 +30,14 @@ export default function BasicTableOne() {
   const [error, setError] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false); // Trạng thái xử lý để ngăn yêu cầu trùng lặp
 
   const getEmployeeEmail = async () => {
     try {
       const response = await axios.get(url.EMPLOYEE.PROFILE);
       return response.data.email;
     } catch (err) {
-      throw new Error('Không thể lấy thông tin người dùng');
+      throw new Error("Không thể lấy thông tin người dùng");
     }
   };
 
@@ -43,25 +45,25 @@ export default function BasicTableOne() {
     const fetchAppointments = async () => {
       try {
         const email = await getEmployeeEmail();
-        const response = await axios.get(url.APPOINTMENT.GET_BY_EMPLOYEE.replace('{email}', email));
-        console.log('API response:', response.data);
+        const response = await axios.get(url.APPOINTMENT.GET_BY_EMPLOYEE.replace("{email}", email));
+        console.log("API response:", response.data);
 
         const appointmentMap = new Map<number, Appointment>();
         response.data.forEach((item: any) => {
           const appointmentId = item.appointmentId;
           if (appointmentMap.has(appointmentId)) {
             const existing = appointmentMap.get(appointmentId)!;
-            existing.serviceName.push(item.storeService?.serviceName || 'Unknown Service');
+            existing.serviceName.push(item.storeService?.serviceName || "Unknown Service");
           } else {
             appointmentMap.set(appointmentId, {
               appointmentId: item.appointmentId,
-              storeName: item.storeService?.storeName || 'Unknown Store',
-              serviceName: [item.storeService?.serviceName || 'Unknown Service'],
-              employeeName: item.employee?.fullName || 'Unknown Employee',
+              storeName: item.storeService?.storeName || "Unknown Store",
+              serviceName: [item.storeService?.serviceName || "Unknown Service"],
+              employeeName: item.employee?.fullName || "Unknown Employee",
               startTime: item.startTime,
               endTime: item.endTime,
-              status: item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase(), // Chuẩn hóa trạng thái
-              userName: item.user?.fullName || 'Unknown User',
+              status: item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase(),
+              userName: item.user?.fullName || "Unknown User",
               createdAt: item.createdAt || new Date().toISOString(),
             });
           }
@@ -70,18 +72,17 @@ export default function BasicTableOne() {
         const sortedAppointments = Array.from(appointmentMap.values()).sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
-        
-        console.log('Sorted Appointments:', sortedAppointments);
+
+        console.log("Sorted Appointments:", sortedAppointments);
         setAppointments(sortedAppointments);
         setLoading(false);
       } catch (err: any) {
-        setError(err.response?.data?.message || 'Không thể tải lịch sử đặt lịch');
+        setError(err.response?.data?.message || "Không thể tải lịch sử đặt lịch");
         setLoading(false);
       }
     };
     fetchAppointments();
   }, []);
-
 
   const handleViewDetail = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
@@ -96,11 +97,79 @@ export default function BasicTableOne() {
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case "Pending": return "warning";
-      case "Confirmed": return "primary";
-      case "Completed": return "success";
-      case "Canceled": return "light";
-      default: return "error";
+      case "Pending":
+        return "warning";
+      case "Confirmed":
+        return "primary";
+      case "Completed":
+        return "success";
+      case "Canceled":
+        return "light";
+      default:
+        return "error";
+    }
+  };
+
+  const handleConfirm = async (appointmentId: number) => {
+    if (isProcessing) return; // Ngăn thao tác khi đang xử lý
+    setIsProcessing(true);
+    try {
+      await axios.patch(url.APPOINTMENT.CONFIRM.replace("${id}", appointmentId.toString()));
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.appointmentId === appointmentId ? { ...a, status: "Confirmed" } : a
+        )
+      );
+      setSelectedAppointment((prev) =>
+        prev && prev.appointmentId === appointmentId ? { ...prev, status: "Confirmed" } : prev
+      );
+    } catch (error: any) {
+      console.error("Lỗi khi xác nhận lịch hẹn:", error.response?.data || error.message);
+      alert(`Xác nhận thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleCancel = async (appointmentId: number) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await axios.patch(url.APPOINTMENT.CANCEL.replace("${id}", appointmentId.toString()));
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.appointmentId === appointmentId ? { ...a, status: "Canceled" } : a
+        )
+      );
+      setSelectedAppointment((prev) =>
+        prev && prev.appointmentId === appointmentId ? { ...prev, status: "Canceled" } : prev
+      );
+    } catch (error: any) {
+      console.error("Lỗi khi hủy lịch hẹn:", error.response?.data || error.message);
+      alert(`Hủy thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleComplete = async (appointmentId: number) => {
+    if (isProcessing) return;
+    setIsProcessing(true);
+    try {
+      await axios.patch(url.APPOINTMENT.COMPLETE.replace("${id}", appointmentId.toString()));
+      setAppointments((prev) =>
+        prev.map((a) =>
+          a.appointmentId === appointmentId ? { ...a, status: "Completed" } : a
+        )
+      );
+      setSelectedAppointment((prev) =>
+        prev && prev.appointmentId === appointmentId ? { ...prev, status: "Completed" } : prev
+      );
+    } catch (error: any) {
+      console.error("Lỗi khi hoàn thành lịch hẹn:", error.response?.data || error.message);
+      alert(`Hoàn thành thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -143,7 +212,7 @@ export default function BasicTableOne() {
                     {item.userName}
                   </TableCell>
                   <TableCell className="px-4 py-3 text-gray-500 text-start text-theme-sm dark:text-gray-400">
-                    {item.serviceName.join(", ")} {/* Hiển thị mảng dịch vụ */}
+                    {item.serviceName.join(", ")}
                   </TableCell>
                   <TableCell className="px-4 py-3">
                     {new Date(item.createdAt).toLocaleDateString("vi-VN")}
@@ -191,52 +260,32 @@ export default function BasicTableOne() {
             {selectedAppointment.status === "Pending" && (
               <div className="flex justify-end gap-2 mt-8">
                 <button
-                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600"
-                  onClick={async () => {
-                    try {
-                      await axios.patch(
-                        url.APPOINTMENT.CONFIRM.replace('${id}', selectedAppointment.appointmentId.toString())
-                      );
-                      setAppointments(prev =>
-                        prev.map(a =>
-                          a.appointmentId === selectedAppointment.appointmentId
-                            ? { ...a, status: "Confirmed" }
-                            : a
-                        )
-                      );
-                      setSelectedAppointment({ ...selectedAppointment, status: "Confirmed" });
-                    } catch (error) {
-                      alert("Xác nhận thất bại!");
-                    }
-                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 disabled:bg-blue-300"
+                  onClick={() => handleConfirm(selectedAppointment.appointmentId)}
+                  disabled={isProcessing}
                 >
-                  Xác nhận
+                  {isProcessing ? "Đang xử lý..." : "Xác nhận"}
                 </button>
                 <button
-                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600"
-                  onClick={async () => {
-                    try {
-                      await axios.patch(
-                        url.APPOINTMENT.CANCEL.replace('${id}', selectedAppointment.appointmentId.toString())
-                      );
-                      setAppointments(prev =>
-                        prev.map(a =>
-                          a.appointmentId === selectedAppointment.appointmentId
-                            ? { ...a, status: "Canceled" }
-                            : a
-                        )
-                      );
-                      setSelectedAppointment({ ...selectedAppointment, status: "Canceled" });
-                    } catch (error) {
-                      alert("Hủy thất bại!");
-                    }
-                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded hover:bg-gray-600 disabled:bg-gray-300"
+                  onClick={() => handleCancel(selectedAppointment.appointmentId)}
+                  disabled={isProcessing}
                 >
-                  Hủy
+                  {isProcessing ? "Đang xử lý..." : "Hủy"}
                 </button>
               </div>
             )}
-            
+            {selectedAppointment.status === "Confirmed" && (
+              <div className="flex justify-end gap-2 mt-8">
+                <button
+                  className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600 disabled:bg-green-300"
+                  onClick={() => handleComplete(selectedAppointment.appointmentId)}
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Đang xử lý..." : "Hoàn thành"}
+                </button>
+              </div>
+            )}
           </div>
         )}
       </Modal>

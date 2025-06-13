@@ -54,6 +54,8 @@ const url = {
     GET_BY_EMPLOYEE: 'appointments/employee/{email}', // GET: Lấy lịch hẹn theo nhân viên
     CONFIRM: 'appointments/${id}/confirm',        // PATCH: Nhân viên xác nhận lịch hẹn
     CANCEL: 'appointments/${id}/cancel',     // PATCH: Khách hoặc nhân viên huỷ lịch hẹn
+      COMPLETE: 'appointments/${id}/complete', // PATCH: Nhân viên hoàn thành lịch hẹn   
+
     },
     SERVICE: {
         GET_ALL: "services", // Lấy danh sách tất cả dịch vụ.
