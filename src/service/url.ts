@@ -40,8 +40,8 @@ const url = {
     },
 
     WORKING_TIME_SLOT: {
-        CREATE: "employee/working-time-slots/registration", // Tạo mới một khung giờ làm việc.
-        GET_BY_EMPLOYEE: "employee/working-time-slots/worktimelist", // Lấy danh sách khung giờ làm việc của một nhân viên cụ thể.
+        CREATE: "working-time-slots/registration", // Tạo mới một khung giờ làm việc.
+        GET_BY_EMPLOYEE: "working-time-slots/list", // Lấy danh sách khung giờ làm việc của một nhân viên cụ thể.
     },
 
      APPOINTMENT: {
@@ -54,7 +54,7 @@ const url = {
     GET_BY_EMPLOYEE: 'appointments/employee/{email}', // GET: Lấy lịch hẹn theo nhân viên
     CONFIRM: 'appointments/${id}/confirm',        // PATCH: Nhân viên xác nhận lịch hẹn
     CANCEL: 'appointments/${id}/cancel',     // PATCH: Khách hoặc nhân viên huỷ lịch hẹn
-      COMPLETE: 'appointments/${id}/complete', // PATCH: Nhân viên hoàn thành lịch hẹn   
+    COMPLETE: 'appointments/${id}/complete', // PATCH: Nhân viên hoàn thành lịch hẹn   
 
     },
     SERVICE: {

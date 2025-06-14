@@ -58,24 +58,8 @@ const navItems: NavItem[] = [
             },
         ],
     },
-    {
-        icon: <CalenderIcon />,
-        name: "Lịch",
-        path: "/calendar",
-        roles: ["ROLE_EMPLOYEE"],
-    },
-    {
-        icon: <UserCircleIcon />,
-        name: "Nhân viên",
-        path: "/profile",
-        roles: ["ROLE_EMPLOYEE"],
-    },
-    {
-        name: "Cuộc hẹn",
-        icon: <TableIcon />,
-        path: "/basic-tables",
-        roles: ["ROLE_EMPLOYEE"],
-    },
+  
+   
     {
         name: "Quản lý nhân sự",
         icon: <UserCircleIcon />,
@@ -89,7 +73,28 @@ const navItems: NavItem[] = [
             },
         ],
     },
-    {
+    
+  {
+    icon: <CalenderIcon />,
+    name: "Lịch",
+    path: "/calendar",
+    roles: ["ROLE_EMPLOYEE"],
+  },
+  {
+    icon: <UserCircleIcon />,
+    name: "Nhân viên",
+    path: "/profile",
+    roles: ["ROLE_EMPLOYEE"],
+  },
+  
+  {
+    name: "Cuộc hẹn",
+    icon: <TableIcon />,
+    path: "/basic-tables",
+    roles: ["ROLE_EMPLOYEE"],
+  },
+
+  {
         name: "Quản lý dịch vụ",
         icon: <GridIcon />,
         roles: ["ROLE_ADMIN"],

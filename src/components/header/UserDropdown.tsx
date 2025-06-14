@@ -8,20 +8,23 @@ export default function UserDropdown() {
   const [user, setUser] = useState<{ fullName: string; email: string; avatar?: string } | null>(null);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const fullName = localStorage.getItem("fullName");
-    const email = localStorage.getItem("email");
-    const avatarUrl = localStorage.getItem("avatarUrl");
-    if (fullName && email) {
-      setUser({
-        fullName,
-        email,
-        avatar: avatarUrl || "/images/user/owner.jpg" // Fallback avatar
-      });
-    } else {
-      setUser({ fullName: "Guest", email: "guest@email.com", avatar: "/images/user/owner.jpg" });
-    }
-  }, []);
+ useEffect(() => {
+  const storedUser = localStorage.getItem("user");
+  if (storedUser) {
+    const parsed = JSON.parse(storedUser);
+    setUser({
+      fullName: parsed.fullName,
+      email: parsed.email,
+      avatar: parsed.avatarUrl || "/images/user/owner.jpg",
+    });
+  } else {
+    setUser({
+      fullName: "Guest",
+      email: "guest@email.com",
+      avatar: "/images/user/owner.jpg",
+    });
+  }
+}, []);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);

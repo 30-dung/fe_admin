@@ -108,25 +108,34 @@ export default function SignInForm() {
   };
 
   const fetchUserProfile = async (token: string, role: string) => {
-    try {
-      const headers = { Authorization: `Bearer ${token}` };
-      if (role.includes("ROLE_ADMIN")) {
-        const response = await axios.get<UserProfileResponse>(url.USER.PROFILE, { headers });
-        localStorage.setItem("fullName", response.data.fullName);
-        localStorage.setItem("email", response.data.email);
-      } else if (role.includes("ROLE_EMPLOYEE")) {
-        const response = await axios.get<EmployeeProfileResponse>(url.EMPLOYEE.PROFILE, { headers });
-        localStorage.setItem("fullName", response.data.fullName);
-        localStorage.setItem("email", response.data.email);
-        if (response.data.avatarUrl) {
-          localStorage.setItem("avatarUrl", response.data.avatarUrl);
-        }
-      }
-    } catch (error) {
-      console.error("Failed to fetch profile:", error);
-      setNotification({ message: "Failed to load profile", isSuccess: false });
+  try {
+    const headers = { Authorization: `Bearer ${token}` };
+    let user;
+
+    if (role.includes("ROLE_ADMIN")) {
+      const response = await axios.get<UserProfileResponse>(url.USER.PROFILE, { headers });
+      user = {
+        fullName: response.data.fullName,
+        email: response.data.email,
+        avatarUrl: "/images/user/owner.jpg", // fallback
+      };
+    } else if (role.includes("ROLE_EMPLOYEE")) {
+      const response = await axios.get<EmployeeProfileResponse>(url.EMPLOYEE.PROFILE, { headers });
+      user = {
+        fullName: response.data.fullName,
+        email: response.data.email,
+        avatarUrl: response.data.avatarUrl || "/images/user/owner.jpg",
+      };
     }
-  };
+
+    if (user) {
+      localStorage.setItem("user", JSON.stringify(user));
+    }
+  } catch (error) {
+    console.error("Failed to fetch profile:", error);
+    setNotification({ message: "Failed to load profile", isSuccess: false });
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
