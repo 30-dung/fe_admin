@@ -24,10 +24,10 @@ const Calendar: React.FC = () => {
   const [eventEndDate, setEventEndDate] = useState("");
   const [eventEndTime, setEventEndTime] = useState("");
   const [events, setEvents] = useState<CalendarEvent[]>([]);
-  const [user, setUser] = useState<{ fullName: string; email: string; avatarUrl?: string } | null>(null);
   const { isOpen, openModal, closeModal } = useModal();
 
-  const currentDate = new Date().toISOString().split("T")[0]; // June 14, 2025, 07:37 PM +07
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const currentDate = new Date().toISOString().split("T")[0]; // June 14, 2025
 
   useEffect(() => {
     const fetchWorkingTimeSlots = async () => {
@@ -52,11 +52,6 @@ const Calendar: React.FC = () => {
         console.error("Error fetching working time slots:", error);
       }
     };
-
-    const storedUser = localStorage.getItem("user");
-    if (storedUser) {
-      setUser(JSON.parse(storedUser));
-    }
 
     fetchWorkingTimeSlots();
   }, []);
@@ -209,7 +204,7 @@ const Calendar: React.FC = () => {
                 <label className="block mb-1 font-medium">Tên nhân viên</label>
                 <input
                   type="text"
-                  value={user?.fullName || ""}
+                  value={user?.fullName || "Nguyễn Duy Hải"}
                   disabled
                   className="w-full border px-3 py-2 rounded bg-gray-100"
                 />
