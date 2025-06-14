@@ -40,8 +40,8 @@ const url = {
     },
 
     WORKING_TIME_SLOT: {
-        CREATE: "employee/working-time-slots/registration", // Tạo mới một khung giờ làm việc.
-        GET_BY_EMPLOYEE: "employee/working-time-slots/worktimelist", // Lấy danh sách khung giờ làm việc của một nhân viên cụ thể.
+        CREATE: "working-time-slots/registration", // Tạo mới một khung giờ làm việc.
+        GET_BY_EMPLOYEE: "working-time-slots/list", // Lấy danh sách khung giờ làm việc của một nhân viên cụ thể.
     },
 
      APPOINTMENT: {
