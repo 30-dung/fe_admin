@@ -46,17 +46,27 @@ const salaryTypeLabel = {
     COMMISSION: "Hoa hồng",
     MIXED: "Kết hợp",
 };
+interface Store {
+    storeId: number;
+    storeName: string;
+}
 
 const EmployeeList: React.FC = () => {
+    const [stores, setStores] = useState<Store[]>([]);
     const [storeId, setStoreId] = useState<number>(1);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
 
+    // Lấy danh sách cửa hàng
+    useEffect(() => {
+        axios.get(url.STORE.ALL).then((res) => setStores(res.data));
+    }, []);
+
+    // Lấy danh sách nhân viên theo storeId
     useEffect(() => {
         const fetchEmployees = async () => {
             setLoading(true);
             try {
-                // Thay {storeId} trong url
                 const endpoint = url.EMPLOYEE.GET_BY_STORE.replace(
                     "{storeId}",
                     String(storeId)
@@ -72,23 +82,31 @@ const EmployeeList: React.FC = () => {
         fetchEmployees();
     }, [storeId]);
 
+    // Lấy tên cửa hàng theo id
+    const storeName =
+        stores.find((s) => s.storeId === storeId)?.storeName || `#${storeId}`;
+
     return (
         <div className="max-w-5xl mx-auto mt-8">
             <div className="flex items-center justify-between mb-6">
                 <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
-                    Danh sách nhân viên cửa hàng #{storeId}
+                    Danh sách nhân viên {storeName}
                 </h2>
                 <div>
                     <label className="mr-2 text-gray-700 dark:text-gray-200">
-                        Nhập Store ID:
+                        Chọn cửa hàng:
                     </label>
-                    <input
-                        type="number"
+                    <select
                         value={storeId}
                         onChange={(e) => setStoreId(Number(e.target.value))}
-                        className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-24"
-                        min={1}
-                    />
+                        className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 w-48"
+                    >
+                        {stores.map((store) => (
+                            <option key={store.storeId} value={store.storeId}>
+                                {store.storeName}
+                            </option>
+                        ))}
+                    </select>
                 </div>
             </div>
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 border border-gray-200 dark:border-gray-700">
@@ -101,7 +119,9 @@ const EmployeeList: React.FC = () => {
                         <table className="w-full text-left">
                             <thead>
                                 <tr>
-                                    <th className="py-2">#</th>
+                                    <th className="py-2 dark:text-gray-400">
+                                        #
+                                    </th>
                                     <th className="py-2 dark:text-gray-400">
                                         Avatar
                                     </th>
@@ -134,7 +154,9 @@ const EmployeeList: React.FC = () => {
                                         key={emp.employeeId}
                                         className="border-t border-gray-100 dark:border-gray-800"
                                     >
-                                        <td className="py-2">{idx + 1}</td>
+                                        <td className="py-2 dark:text-gray-400">
+                                            {idx + 1}
+                                        </td>
                                         <td className="py-2">
                                             {emp.avatarUrl ? (
                                                 <img
