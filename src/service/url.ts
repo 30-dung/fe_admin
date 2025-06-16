@@ -64,6 +64,18 @@ const url = {
         UPDATE: "services/${id}", // Cập nhật thông tin dịch vụ.
         DELETE: "services/${id}", // Xóa một dịch vụ.
     },
+    SALARY: {
+    PROCESS_UNPROCESSED: "salary/process-unprocessed",
+    GENERATE_PAYROLL: "salary/generate-payroll",
+    GENERATE_PAYROLLS: "salary/generate-payrolls", // Thêm mới
+    MY_PAYROLL: "salary/my-payroll",
+    MY_PAYROLL_HISTORY: "salary/my-payroll/history",
+    MONTHLY_PAYROLLS: "salary/payroll/monthly",
+    APPROVE_PAYROLL: "salary/approve",
+    MARK_PAID: "salary/mark-paid",
+    EMPLOYEES: "salary/employees",
+
+  },
 
 };
 

@@ -14,6 +14,7 @@ import {
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import { Group, GroupIcon } from "lucide-react";
+import routes from "@/config/routes";
 
 // Định nghĩa kiểu vai trò
 type UserRole = "ROLE_ADMIN" | "ROLE_EMPLOYEE";
@@ -107,6 +108,20 @@ const navItems: NavItem[] = [
             },
         ],
     },
+
+    {
+    name: "Quản lý bảng lương",
+    icon: <GridIcon />,
+    path: routes.payrollDashboard,
+    roles: ["ROLE_ADMIN"],
+  },
+  {
+    name: "Bảng lương của tôi",
+    icon: <UserCircleIcon />,
+    path: routes.employeePayroll,
+    roles: ["ROLE_EMPLOYEE"],
+  },
+
 ];
 
 interface AppSidebarProps {
