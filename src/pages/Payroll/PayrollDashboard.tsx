@@ -140,19 +140,17 @@ const PayrollDashboard: React.FC = () => {
         fetchAllPayrolls(1, pagination.pageSize, year, month, selectedEmployee);
     };
 
-    const getEmployeeDisplayName = (employeeData: number | Employee): string => { // <--- SỬA TẠI ĐÂY
+    const getEmployeeDisplayName = (employeeData: number | Employee): string => {
         let id: number;
         if (typeof employeeData === 'object' && employeeData !== null && 'employeeId' in employeeData) {
-            id = employeeData.employeeId; // Nếu là đối tượng Employee, lấy employeeId
+            id = employeeData.employeeId;
         } else if (typeof employeeData === 'number') {
-            id = employeeData; // Nếu là ID, sử dụng trực tiếp
+            id = employeeData;
         } else {
             return `ID: N/A (Dữ liệu không hợp lệ)`;
         }
 
-        // Tìm nhân viên trong danh sách `employees` đã tải
         const employee = employees.find((e) => e.employeeId === id);
-        // Trả về tên đầy đủ, hoặc email, hoặc ID nếu không tìm thấy tên
         return employee ? (employee.fullName || employee.email || `ID: ${id}`) : `ID: ${id} (Không tìm thấy tên)`;
     };
 
@@ -188,7 +186,7 @@ const PayrollDashboard: React.FC = () => {
                                 onChange={(e) => setYear(Number(e.target.value))}
                                 placeholder="Tìm theo năm..."
                                 className="w-full border border-gray-300 rounded-lg py-2 pl-10 pr-10 shadow-sm
-                                hover:border-blue-500 focus:border-blue-500 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700" // Added dark:border-gray-700
+                                hover:border-blue-500 focus:border-blue-500 focus:outline-none dark:bg-gray-800 dark:text-gray-200 dark:border-gray-700"
                             />
 
                             {year && (
@@ -268,31 +266,35 @@ const PayrollDashboard: React.FC = () => {
                     {/* Payroll list Table - Core changes for responsiveness without scroll */}
                     <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden">
                         <div className="overflow-x-auto">
-                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800 table-fixed">
+                            {/* REMOVED table-fixed entirely from the table element. This allows for auto-sizing columns. */}
+                            <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                                 <thead className="bg-gray-50 dark:bg-gray-900">
                                     <tr className="dark:bg-gray-900">
-                                        <th className="w-[18%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {/* Removed w-[X%] and carefully applied min-w for columns that need it. */}
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
                                             Nhân viên
                                         </th>
-                                        <th className="w-[15%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {/* Adjusted min-w for "Kỳ lương" as it contains date ranges */}
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[180px]">
                                             Kỳ lương
                                         </th>
-                                        <th className="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Lương cơ bản
                                         </th>
-                                        <th className="w-[12%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Hoa hồng
                                         </th>
-                                        <th className="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Tổng lương
                                         </th>
-                                        <th className="w-[13%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Số luợng hoàn thành
                                         </th>
-                                        <th className="w-[9%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Trạng thái
                                         </th>
-                                        <th className="w-[20%] px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {/* Adjusted min-w for "Hành động" as it contains multiple interactive elements */}
+                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[160px]">
                                             Hành động
                                         </th>
                                     </tr>
@@ -300,13 +302,13 @@ const PayrollDashboard: React.FC = () => {
                                 <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                                     {isLoading ? (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                            <td colSpan={8} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                 Đang tải...
                                             </td>
                                         </tr>
                                     ) : payrolls.length === 0 ? (
                                         <tr>
-                                            <td colSpan={7} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
+                                            <td colSpan={8} className="px-6 py-4 text-center text-gray-500 dark:text-gray-400">
                                                 Không có bảng lương nào.
                                             </td>
                                         </tr>
@@ -316,29 +318,29 @@ const PayrollDashboard: React.FC = () => {
                                                 <td className="px-6 py-4 overflow-hidden text-ellipsis dark:text-gray-100">
                                                     {getEmployeeDisplayName(payroll.employee)}
                                                 </td>
-                                                <td className="px-6 py-4 dark:text-gray-100">
-                                                    {format(new Date(payroll.periodStartDate), "dd/MM/yyyy", { locale: vi })} -{" "}
-                                                    {format(new Date(payroll.periodEndDate), "dd/MM/yyyy", { locale: vi })}
+                                                {/* Ensure date format is compact and consider flex-wrap if dates are too long */}
+                                                <td className="px-6 py-4 dark:text-gray-100 flex flex-col justify-center">
+                                                    <span>{format(new Date(payroll.periodStartDate), "dd/MM/yyyy", { locale: vi })}</span>
+                                                    <span>- {format(new Date(payroll.periodEndDate), "dd/MM/yyyy", { locale: vi })}</span>
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
-                                                    {payroll.baseSalary.toLocaleString("vi-VN")} VND
+                                                    {Math.floor(payroll.baseSalary).toLocaleString("vi-VN")} VND
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
-                                                    {payroll.totalCommission.toLocaleString("vi-VN")} VND
+                                                    {Math.floor(payroll.totalCommission).toLocaleString("vi-VN")} VND
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
-                                                    {payroll.totalAmount.toLocaleString("vi-VN")} VND
+                                                    {Math.floor(payroll.totalAmount).toLocaleString("vi-VN")} VND
                                                 </td>
                                                 <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
                                                     {payroll.totalAppointments}
                                                 </td>
                                                 <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                                                        payroll.status === 'PAID' ? 'bg-green-100 text-green-800' :
-                                                        payroll.status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
-                                                        payroll.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                                        'bg-gray-100 text-gray-800'
-                                                    }`}>
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${payroll.status === 'PAID' ? 'bg-green-100 text-green-800' :
+                                                            payroll.status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
+                                                                payroll.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
+                                                                    'bg-gray-100 text-gray-800'
+                                                        }`}>
                                                         {payroll.status}
                                                     </span>
                                                 </td>

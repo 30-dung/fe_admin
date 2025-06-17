@@ -13,7 +13,6 @@ import { ProtectedRoutes } from "./ProtectedRoutes";
 import routes from "config/routes";
 import CreateEmployeeForm from "pages/Hrm/CreateEmp";
 import { Store } from "@/pages/Store/Store";
-import StoreService from "pages/Store/StoreService";
 import ServiceManager from "pages/sm/ServiceManager";
 import EmployeeList from "pages/Hrm/GetEmp";
 import EmployeePayroll from "./pages/Payroll/EmployeePayroll";
@@ -59,10 +58,7 @@ export default function App() {
                             />
                             {/* Store */}
                             <Route path={routes.store} element={<Store />} />
-                            <Route
-                                path={routes.storeService}
-                                element={<StoreService />}
-                            />
+
                             {/* Human Resources Management */}
                             <Route
                                 path={routes.ce}
@@ -78,8 +74,8 @@ export default function App() {
                                 element={<ServiceManager />}
                             />
                             <Route path={routes.payrollDashboard} element={<PayrollDashboard />} /> {/* Thêm route */}
-            <Route path={routes.employeePayroll} element={<EmployeePayroll />} /> {/* Thêm route */}
-            <Route path={routes.adminAppointments} element={<AdminAppointments />} />
+                            <Route path={routes.employeePayroll} element={<EmployeePayroll />} /> {/* Thêm route */}
+                            <Route path={routes.adminAppointments} element={<AdminAppointments />} />
                         </Route>
                     </Route>
                 </Routes>

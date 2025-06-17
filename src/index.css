@@ -776,3 +776,81 @@ span.flatpickr-weekday,
 .simplebar-scrollbar.simplebar-visible:before {
   @apply opacity-100;
 }
+
+/* Custom Scrollbar for Webkit browsers (Chrome, Safari, Edge) */
+/* Điều chỉnh độ rộng của thanh cuộn */
+.custom-scrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px; /* Nếu có cuộn ngang */
+}
+
+/* Điều chỉnh phần track (nền của thanh cuộn) */
+.custom-scrollbar::-webkit-scrollbar-track {
+    background: #f1f1f1; /* Màu nền nhẹ */
+    border-radius: 10px;
+}
+
+/* Điều chỉnh phần thumb (con lăn) */
+.custom-scrollbar::-webkit-scrollbar-thumb {
+    background: #888; /* Màu xám đậm */
+    border-radius: 10px;
+    border: 2px solid #f1f1f1; /* Tạo viền mỏng cùng màu nền track để tạo hiệu ứng "con lăn nổi" */
+}
+
+/* Hiệu ứng khi di chuột qua con lăn */
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
+/* Scrollbar cho Firefox */
+.custom-scrollbar {
+    scrollbar-width: thin; /* Đặt là "thin" để thanh cuộn mỏng hơn */
+    scrollbar-color: #888 #f1f1f1; /* Màu con lăn và màu track */
+}
+
+/* ========================================================== */
+/* Scroll Fade Container for Detail Modal */
+/* Áp dụng cho phần tử mà bạn muốn cuộn và có hiệu ứng mờ */
+.scroll-fade-container-detail {
+    position: relative; /* Quan trọng để pseudo-elements có thể định vị tương đối với nó */
+    overflow-y: auto; /* Kích hoạt thanh cuộn dọc khi nội dung tràn */
+    /* Chiều cao của phần tử này sẽ được đặt trong JSX bằng Tailwind CSS (ví dụ: h-full hoặc max-h-fit) */
+}
+
+/* Lớp phủ mờ ở phía trên */
+.scroll-fade-container-detail::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 30px; /* Chiều cao của vùng mờ */
+    /* Gradient từ màu nền modal (đậm) sang trong suốt */
+    background: linear-gradient(to bottom, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none; /* Rất quan trọng: cho phép click/cuộn qua lớp phủ */
+    z-index: 10; /* Đảm bảo lớp phủ nằm trên nội dung */
+}
+
+/* Lớp phủ mờ ở phía trên cho Dark Mode */
+.dark .scroll-fade-container-detail::before {
+    background: linear-gradient(to bottom, rgba(31,41,55,1) 0%, rgba(31,41,55,0) 100%); /* gray-900 của Tailwind */
+}
+
+/* Lớp phủ mờ ở phía dưới */
+.scroll-fade-container-detail::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 20px; /* Chiều cao của vùng mờ */
+    /* Gradient từ trong suốt sang màu nền modal (đậm) */
+    background: linear-gradient(to top, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 100%);
+    pointer-events: none; /* Rất quan trọng: cho phép click/cuộn qua lớp phủ */
+    z-index: 10; /* Đảm bảo lớp phủ nằm trên nội dung */
+}
+
+/* Lớp phủ mờ ở phía dưới cho Dark Mode */
+.dark .scroll-fade-container-detail::after {
+    background: linear-gradient(to top, rgba(31,41,55,1) 0%, rgba(31,41,55,0) 100%); /* gray-900 của Tailwind */
+}
