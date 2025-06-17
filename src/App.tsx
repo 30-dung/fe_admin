@@ -18,6 +18,7 @@ import ServiceManager from "./pages/sm/ServiceManager";
 import EmployeePayroll from "./pages/Payroll/EmployeePayroll";
 import PayrollDashboard from "./pages/Payroll/PayrollDashboard";
 import { AuthProvider } from '@/context/AuthContext';
+import AdminAppointments from "./pages/AllAppoiment/AdminAppointments";
 // import PrivateRoute from "./components/common/PrivateRoute";
 
 export default function App() {
@@ -67,6 +68,7 @@ export default function App() {
                             <Route path={routes.serviceManager} element={<ServiceManager />} />
                             <Route path={routes.payrollDashboard} element={<PayrollDashboard />} /> {/* Thêm route */}
             <Route path={routes.employeePayroll} element={<EmployeePayroll />} /> {/* Thêm route */}
+            <Route path={routes.adminAppointments} element={<AdminAppointments />} />
                         </Route>
                     </Route>
                 </Routes>

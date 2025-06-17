@@ -242,7 +242,7 @@ export function Store() {
                                 placeholder="Tìm theo thành phố..."
                                 className="w-full border border-gray-300 rounded-full py-2 pl-10 pr-10 shadow-sm
              hover:border-blue-500 
-             focus:border-blue-500 focus:outline-none"
+             focus:border-blue-500 focus:outline-none dark:bg-gray-800 dark:text-gray-200" // Added dark mode classes
                             />
 
                             {/* Nút X xoá ở bên phải */}
@@ -270,36 +270,34 @@ export function Store() {
                         </button>
                     </div>
 
-                    {/* Add Store Button */}
-
                     {/* Store Table */}
                     <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                            <thead className="bg-gray-50">
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800"> {/* Added dark:divide-gray-800 */}
+                            <thead className="bg-gray-50 dark:bg-gray-900"> {/* Added dark:bg-gray-900 */}
                                 <tr className="dark:bg-gray-900">
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
                                         ID
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
                                         Tên cửa hàng
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
                                         Thành phố
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
                                         Quận/Huyện
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
                                         Hành động
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200">
+                            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"> {/* Added dark:divide-gray-800 */}
                                 {stores.length === 0 ? (
                                     <tr>
                                         <td
                                             colSpan={5}
-                                            className="px-6 py-4 text-center dark:text-gray-400 text-gray-500"
+                                            className="px-6 py-4 text-center text-gray-500 dark:text-gray-400" // Adjusted dark:text-gray-400
                                         >
                                             Không có dữ liệu
                                         </td>
@@ -308,18 +306,18 @@ export function Store() {
                                     stores.map((store) => (
                                         <tr
                                             key={store.storeId}
-                                            className="hover:bg-gray-50 dark:bg-gray-900"
+                                            className="hover:bg-gray-50 dark:hover:bg-gray-800" // Adjusted dark:hover:bg-gray-800
                                         >
-                                            <td className="dark:text-gray-400 px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
                                                 {store.storeId}
                                             </td>
-                                            <td className="dark:text-gray-400 px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
                                                 {store.storeName}
                                             </td>
-                                            <td className="dark:text-gray-400 px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
                                                 {store.cityProvince || "N/A"}
                                             </td>
-                                            <td className="dark:text-gray-400 px-6 py-4 whitespace-nowrap">
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
                                                 {store.district || "N/A"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap space-x-3">
@@ -327,7 +325,7 @@ export function Store() {
                                                     onClick={() =>
                                                         openModal("view", store)
                                                     }
-                                                    className="text-green-600 hover:text-green-800"
+                                                    className="text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300" // Added dark mode colors
                                                     title="Xem"
                                                 >
                                                     <Eye size={18} />
@@ -336,7 +334,7 @@ export function Store() {
                                                     onClick={() =>
                                                         openModal("edit", store)
                                                     }
-                                                    className="text-blue-600 hover:text-blue-800"
+                                                    className="text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300" // Added dark mode colors
                                                     title="Sửa"
                                                 >
                                                     <Pencil size={18} />
@@ -354,11 +352,11 @@ export function Store() {
                         <button
                             onClick={() => handleFilter()}
                             disabled={pagination.currentPage === 1}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300"
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" // Added dark mode classes
                         >
                             Trang trước
                         </button>
-                        <span className="text-gray-700">
+                        <span className="text-gray-700 dark:text-gray-200"> {/* Added dark mode class */}
                             Trang {pagination.currentPage} /{" "}
                             {pagination.totalPages}
                         </span>
@@ -367,7 +365,7 @@ export function Store() {
                             disabled={
                                 pagination.currentPage === pagination.totalPages
                             }
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300"
+                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" // Added dark mode classes
                         >
                             Trang sau
                         </button>
@@ -396,7 +394,7 @@ export function Store() {
                                         <div className="flex flex-col md:flex-row gap-6 w-full">
                                             {/* Cột trái: hình ảnh */}
                                             <div className="md:w-1/3 w-full">
-                                                <Label className="block text-sm font-medium text-gray-700 mb-1">
+                                                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"> {/* Added dark:text-gray-200 */}
                                                     Hình ảnh
                                                 </Label>
                                                 {formData.storeImages ? (
@@ -417,7 +415,7 @@ export function Store() {
                                             {/* Cột phải: thông tin */}
                                             <div className="md:w-2/3 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Tên cửa hàng
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -425,7 +423,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Số điện thoại
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -433,7 +431,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Thành phố
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -442,7 +440,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Quận/Huyện
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -451,7 +449,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Giờ mở cửa
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -460,7 +458,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Giờ đóng cửa
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -469,7 +467,7 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div className="md:col-span-2">
-                                                    <Label className="block text-sm font-medium text-gray-700">
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                         Mô tả
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -480,7 +478,7 @@ export function Store() {
                                                 <div className="md:col-span-2 flex justify-end">
                                                     <button
                                                         onClick={closeModal}
-                                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300"
+                                                        className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" // Added dark mode classes
                                                     >
                                                         Đóng
                                                     </button>
@@ -494,7 +492,7 @@ export function Store() {
                                         className="w-full grid grid-cols-1 md:grid-cols-3 gap-4"
                                     >
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Tên cửa hàng
                                             </Label>
                                             <input
@@ -503,11 +501,11 @@ export function Store() {
                                                 value={formData.storeName}
                                                 onChange={handleInputChange}
                                                 required
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Số điện thoại
                                             </Label>
                                             <input
@@ -516,11 +514,11 @@ export function Store() {
                                                 value={formData.phoneNumber}
                                                 onChange={handleInputChange}
                                                 required
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Thành phố
                                             </Label>
                                             <input
@@ -529,11 +527,11 @@ export function Store() {
                                                 value={formData.cityProvince}
                                                 onChange={handleInputChange}
                                                 required
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Quận/Huyện
                                             </Label>
                                             <input
@@ -542,11 +540,11 @@ export function Store() {
                                                 value={formData.district}
                                                 onChange={handleInputChange}
                                                 required
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Giờ mở cửa
                                             </Label>
                                             <input
@@ -554,11 +552,11 @@ export function Store() {
                                                 name="openingTime"
                                                 value={formData.openingTime}
                                                 onChange={handleInputChange}
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Giờ đóng cửa
                                             </Label>
                                             <input
@@ -566,23 +564,23 @@ export function Store() {
                                                 name="closingTime"
                                                 value={formData.closingTime}
                                                 onChange={handleInputChange}
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 Mô tả
                                             </Label>
                                             <textarea
                                                 name="description"
                                                 value={formData.description}
                                                 onChange={handleInputChange}
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                                 rows={4}
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700">
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
                                                 URL hình ảnh
                                             </Label>
                                             <input
@@ -590,14 +588,14 @@ export function Store() {
                                                 name="storeImages"
                                                 value={formData.storeImages}
                                                 onChange={handleInputChange}
-                                                className="dark:text-gray-400 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500"
+                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
                                             />
                                         </div>
                                         <div className="col-span-full flex justify-end gap-3 mt-4">
                                             <button
                                                 type="button"
                                                 onClick={closeModal}
-                                                className="px-3 py-1.5 text-sm bg-gray-100 text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-200 transition"
+                                                className="px-3 py-1.5 text-sm bg-gray-100 text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-200 transition dark:bg-gray-700 dark:text-gray-200 dark:border-gray-600 dark:hover:bg-gray-600" // Added dark mode classes
                                             >
                                                 Hủy
                                             </button>

@@ -36,7 +36,8 @@ const url = {
         GET_BY_STORE: "employees/store/{storeId}", //Lấy danh sách nhân viên thuộc về một cửa hàng cụ thể.
         CREATE: "employees/create", //Tạo mới một nhân viên.
         GET_PENDING_APPOINTMENTS: "employees/pending", //Lấy danh sách các cuộc hẹn đang chờ của nhân viên.
-        UPDATE_APPOINTMENT_STATUS: "employees/appointments/{appointmentId}/status?action={action}" //Cập nhật trạng thái cuộc hẹn của nhân viên.
+        UPDATE_APPOINTMENT_STATUS: "employees/appointments/{appointmentId}/status?action={action}", //Cập nhật trạng thái cuộc hẹn của nhân viên.
+        GET_ALL: "employees/all",
     },
 
     WORKING_TIME_SLOT: {
@@ -55,7 +56,7 @@ const url = {
     CONFIRM: 'appointments/${id}/confirm',        // PATCH: Nhân viên xác nhận lịch hẹn
     CANCEL: 'appointments/${id}/cancel',     // PATCH: Khách hoặc nhân viên huỷ lịch hẹn
     COMPLETE: 'appointments/${id}/complete', // PATCH: Nhân viên hoàn thành lịch hẹn   
-
+    FILTER: "appointments/filter",
     },
     SERVICE: {
         GET_ALL: "services", // Lấy danh sách tất cả dịch vụ.

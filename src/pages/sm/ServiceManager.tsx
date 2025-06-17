@@ -7,6 +7,8 @@ import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import React, { useEffect, useState } from "react";
 import axios from "service/api";
 import url from "service/url";
+import { toast, ToastContainer } from "react-toastify"; // Import toast for consistent notifications
+import { X } from "lucide-react";
 
 export default function ServiceManager() {
     interface Service {
@@ -27,7 +29,6 @@ export default function ServiceManager() {
         durationMinutes: "",
         serviceImg: "",
     });
-    const [message, setMessage] = useState("");
     const [confirmDelete, setConfirmDelete] = useState<{
         open: boolean;
         id: string | null;
@@ -38,8 +39,8 @@ export default function ServiceManager() {
         try {
             const res = await axios.get(url.SERVICE.GET_ALL);
             setServices(res.data);
-        } catch {
-            setMessage("Không thể tải danh sách dịch vụ");
+        } catch(error: any) { // Catch error properly
+            toast.error(`Không thể tải danh sách dịch vụ: ${error.message}`); // Use toast
         }
     };
 
@@ -56,7 +57,6 @@ export default function ServiceManager() {
             durationMinutes: "",
             serviceImg: "",
         });
-        setMessage("");
         setModal({ type: "add", data: null });
     };
 
@@ -68,7 +68,6 @@ export default function ServiceManager() {
             durationMinutes: String(service.durationMinutes),
             serviceImg: service.serviceImg || "",
         });
-        setMessage("");
         setModal({ type: "edit", data: service });
     };
 
@@ -79,15 +78,14 @@ export default function ServiceManager() {
                 url.SERVICE.GET_BY_ID.replace("${id}", id)
             );
             setModal({ type: "detail", data: res.data });
-        } catch {
-            setMessage("Không thể lấy chi tiết dịch vụ");
+        } catch(error: any) { // Catch error properly
+            toast.error(`Không thể lấy chi tiết dịch vụ: ${error.message}`); // Use toast
         }
     };
 
     // Đóng modal
     const closeModal = () => {
         setModal({ type: null, data: null });
-        setMessage("");
     };
 
     // Xử lý thay đổi form
@@ -100,21 +98,19 @@ export default function ServiceManager() {
     // Thêm mới dịch vụ
     const handleAdd = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage("");
         try {
             await axios.post(url.SERVICE.CREATE, form);
-            setMessage("Tạo dịch vụ thành công!");
+            toast.success("Tạo dịch vụ thành công!"); // Use toast
             closeModal();
             fetchServices();
-        } catch {
-            setMessage("Tạo dịch vụ thất bại!");
+        } catch(error: any) { // Catch error properly
+            toast.error(`Tạo dịch vụ thất bại! ${error.message}`); // Use toast
         }
     };
 
     // Cập nhật dịch vụ
     const handleUpdate = async (e: React.FormEvent) => {
         e.preventDefault();
-        setMessage("");
         try {
             await axios.put(
                 url.SERVICE.UPDATE.replace(
@@ -123,11 +119,11 @@ export default function ServiceManager() {
                 ),
                 form
             );
-            setMessage("Cập nhật thành công!");
+            toast.success("Cập nhật thành công!"); // Use toast
             closeModal();
             fetchServices();
-        } catch {
-            setMessage("Cập nhật thất bại!");
+        } catch(error: any) { // Catch error properly
+            toast.error(`Cập nhật thất bại! ${error.message}`); // Use toast
         }
     };
 
@@ -145,8 +141,9 @@ export default function ServiceManager() {
             );
             fetchServices();
             setConfirmDelete({ open: false, id: null });
-        } catch {
-            setMessage("Xóa thất bại!");
+            toast.success("Xóa dịch vụ thành công!"); // Use toast
+        } catch(error: any) { // Catch error properly
+            toast.error(`Xóa thất bại! ${error.message}`); // Use toast
             setConfirmDelete({ open: false, id: null });
         }
     };
@@ -155,7 +152,7 @@ export default function ServiceManager() {
         <div>
             <PageBreadcrumb pageTitle="Quản lý dịch vụ" />
 
-            <div className="mx-auto mt-8">
+            <div className="mx-auto mt-8 p-4 sm:p-6"> {/* Added padding for small screens */}
                 <div className="flex justify-between items-center mb-4">
                     <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
                         Danh sách dịch vụ
@@ -167,29 +164,27 @@ export default function ServiceManager() {
                         Thêm dịch vụ
                     </button>
                 </div>
-                <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 border border-gray-200 dark:border-gray-700">
-                    <table className="w-full text-left dark:text-gray-400">
-                        <thead>
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow p-6 border border-gray-200 dark:border-gray-700 overflow-x-auto"> {/* Added overflow-x-auto here for table */}
+                    <table className="min-w-full text-left table-fixed divide-y divide-gray-200 dark:divide-gray-800"> {/* Added table-fixed and dark divide */}
+                        <thead className="bg-gray-50 dark:bg-gray-900">
                             <tr>
-                                <th className="py-2">Tên dịch vụ</th>
-                                <th className="py-2">Mô tả</th>
-                                <th className="py-2">Thời lượng</th>
-                                <th className="py-2">Ảnh</th>
-                                <th className="py-2">Hành động</th>
+                                <th className="w-[20%] py-2 px-4 text-gray-500 dark:text-gray-300">Tên dịch vụ</th>
+                                <th className="w-[35%] py-2 px-4 text-gray-500 dark:text-gray-300">Mô tả</th>
+                                <th className="w-[15%] py-2 px-4 text-gray-500 dark:text-gray-300">Thời lượng</th>
+                                <th className="w-[15%] py-2 px-4 text-gray-500 dark:text-gray-300">Ảnh</th>
+                                <th className="w-[15%] py-2 px-4 text-gray-500 dark:text-gray-300">Hành động</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
                             {services.map((s) => (
                                 <tr
                                     key={s.serviceId}
-                                    className="border-t border-gray-100 dark:border-gray-800"
+                                    className="border-t border-gray-100 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800"
                                 >
-                                    <td className="py-2">{s.serviceName}</td>
-                                    <td className="py-2">{s.description}</td>
-                                    <td className="py-2">
-                                        {s.durationMinutes} phút
-                                    </td>
-                                    <td className="py-2">
+                                    <td className="py-2 px-4 dark:text-gray-100 overflow-hidden text-ellipsis">{s.serviceName}</td>
+                                    <td className="py-2 px-4 dark:text-gray-100 overflow-hidden text-ellipsis">{s.description}</td>
+                                    <td className="py-2 px-4 dark:text-gray-100">{s.durationMinutes} phút</td>
+                                    <td className="py-2 px-4">
                                         {s.serviceImg && (
                                             <img
                                                 src={s.serviceImg}
@@ -198,7 +193,7 @@ export default function ServiceManager() {
                                             />
                                         )}
                                     </td>
-                                    <td className="py-2 flex gap-2">
+                                    <td className="py-2 px-4 flex gap-2 items-center">
                                         <button
                                             className="p-2 rounded hover:bg-blue-100 dark:hover:bg-blue-900"
                                             title="Xem"
@@ -206,14 +201,14 @@ export default function ServiceManager() {
                                                 openDetailModal(s.serviceId)
                                             }
                                         >
-                                            <EyeIcon className="w-5 h-5 text-blue-600" />
+                                            <EyeIcon className="w-5 h-5 text-blue-600 dark:text-blue-400" /> {/* Adjusted dark icon color */}
                                         </button>
                                         <button
                                             className="p-2 rounded hover:bg-yellow-100 dark:hover:bg-yellow-900"
                                             title="Sửa"
                                             onClick={() => openEditModal(s)}
                                         >
-                                            <PencilSquareIcon className="w-5 h-5 text-yellow-500" />
+                                            <PencilSquareIcon className="w-5 h-5 text-yellow-500 dark:text-yellow-400" /> {/* Adjusted dark icon color */}
                                         </button>
                                         <button
                                             className="p-2 rounded hover:bg-red-100 dark:hover:bg-red-900"
@@ -222,7 +217,7 @@ export default function ServiceManager() {
                                                 askDelete(s.serviceId)
                                             }
                                         >
-                                            <TrashIcon className="w-5 h-5 text-red-600" />
+                                            <TrashIcon className="w-5 h-5 text-red-600 dark:text-red-400" /> {/* Adjusted dark icon color */}
                                         </button>
                                     </td>
                                 </tr>
@@ -231,7 +226,7 @@ export default function ServiceManager() {
                                 <tr>
                                     <td
                                         colSpan={5}
-                                        className="text-center py-4 text-gray-500"
+                                        className="text-center py-4 text-gray-500 dark:text-gray-400"
                                     >
                                         Không có dịch vụ nào.
                                     </td>
@@ -251,7 +246,7 @@ export default function ServiceManager() {
                                 aria-label="Đóng"
                                 type="button"
                             >
-                                &#10005;
+                                <X size={22} /> {/* Replaced &#10005; with X icon for consistency */}
                             </button>
                             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
                                 {modal.type === "add"
@@ -334,11 +329,7 @@ export default function ServiceManager() {
                                         Hủy
                                     </button>
                                 </div>
-                                {message && (
-                                    <div className="mt-2 text-center text-red-500 dark:text-red-400">
-                                        {message}
-                                    </div>
-                                )}
+                                <ToastContainer position="bottom-center" autoClose={3000} /> {/* Added ToastContainer for local messages */}
                             </form>
                         </div>
                     </div>
@@ -354,33 +345,33 @@ export default function ServiceManager() {
                                 aria-label="Đóng"
                                 type="button"
                             >
-                                &#10005;
+                                <X size={22} /> {/* Replaced &#10005; with X icon for consistency */}
                             </button>
                             <h2 className="text-xl font-bold mb-4 text-gray-800 dark:text-gray-100">
                                 Chi tiết dịch vụ
                             </h2>
-                            <div className="space-y-2 dark:text-gray-400">
+                            <div className="space-y-2 text-gray-700 dark:text-gray-200"> {/* Adjusted text color for dark mode */}
                                 <div>
-                                    <span className="font-semibold dark:text-gray-400">
+                                    <span className="font-semibold text-gray-800 dark:text-gray-100"> {/* Adjusted text color for dark mode */}
                                         Tên dịch vụ:
                                     </span>{" "}
                                     {modal.data.serviceName}
                                 </div>
                                 <div>
-                                    <span className="font-semibold dark:text-gray-400">
+                                    <span className="font-semibold text-gray-800 dark:text-gray-100"> {/* Adjusted text color for dark mode */}
                                         Mô tả:
                                     </span>{" "}
                                     {modal.data.description}
                                 </div>
                                 <div>
-                                    <span className="font-semibold dark:text-gray-400">
+                                    <span className="font-semibold text-gray-800 dark:text-gray-100"> {/* Adjusted text color for dark mode */}
                                         Thời lượng:
                                     </span>{" "}
                                     {modal.data.durationMinutes} phút
                                 </div>
                                 {modal.data.serviceImg && (
                                     <div>
-                                        <span className="font-semibold dark:text-gray-400">
+                                        <span className="font-semibold text-gray-800 dark:text-gray-100"> {/* Adjusted text color for dark mode */}
                                             Ảnh:
                                         </span>
                                         <img
@@ -429,6 +420,7 @@ export default function ServiceManager() {
                     </div>
                 )}
             </div>
+            <ToastContainer position="top-right" autoClose={3000} /> {/* Placed ToastContainer at the end for global notifications */}
         </div>
     );
 }

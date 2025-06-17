@@ -121,6 +121,12 @@ const navItems: NavItem[] = [
     path: routes.employeePayroll,
     roles: ["ROLE_EMPLOYEE"],
   },
+  {
+    name: "Quản lý lịch hẹn",
+    icon: <TableIcon />,
+    path: "/admin-appointments", 
+    roles: ["ROLE_ADMIN"],
+  },
 
 ];
 
