@@ -4,6 +4,7 @@ const routes = {
     calendar: "/calendar",
     basicTables: "/basic-tables",
     ce: "/create-employee",
+    ge: "/employee-list",
     store: "/store",
     storeService: "/store-service",
     serviceManager: "/service-manager",
