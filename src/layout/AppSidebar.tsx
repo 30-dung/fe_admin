@@ -100,19 +100,6 @@ const navItems: NavItem[] = [
         roles: ["ROLE_EMPLOYEE"],
     },
 
-    // {
-    //     name: "Quản lý dịch vụ",
-    //     icon: <GridIcon />,
-    //     roles: ["ROLE_ADMIN"],
-    //     subItems: [
-    //         {
-    //             name: "Dịch vụ",
-    //             path: "/service-manager",
-    //             pro: false,
-    //             roles: ["ROLE_ADMIN"],
-    //         },
-    //     ],
-    // },
 
     {
     name: "Quản lý bảng lương",
