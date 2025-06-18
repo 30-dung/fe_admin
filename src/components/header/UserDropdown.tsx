@@ -5,26 +5,30 @@ import { useNavigate } from "react-router-dom";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<{ fullName: string; email: string; avatar?: string } | null>(null);
+  const [user, setUser] = useState<{ fullName: string; email: string; avatar?: string; role?: string } | null>(null);
   const navigate = useNavigate();
 
- useEffect(() => {
-  const storedUser = localStorage.getItem("user");
-  if (storedUser) {
-    const parsed = JSON.parse(storedUser);
-    setUser({
-      fullName: parsed.fullName,
-      email: parsed.email,
-      avatar: parsed.avatarUrl || "/images/user/owner.jpg",
-    });
-  } else {
-    setUser({
-      fullName: "Guest",
-      email: "guest@email.com",
-      avatar: "/images/user/owner.jpg",
-    });
-  }
-}, []);
+  useEffect(() => {
+    const storedUser = localStorage.getItem("user");
+    const storedRole = localStorage.getItem("role"); // Lấy role riêng lẻ từ localStorage
+    if (storedUser) {
+      const parsed = JSON.parse(storedUser);
+      setUser({
+        fullName: parsed.fullName,
+        email: parsed.email,
+        avatar: parsed.avatarUrl || "/images/user/owner.jpg",
+        role: storedRole || "employee", // Gán role từ localStorage hoặc mặc định "employee"
+      });
+    } else {
+      setUser({
+        fullName: "Guest",
+        email: "guest@email.com",
+        avatar: "/images/user/owner.jpg",
+        role: "guest",
+      });
+    }
+    console.log("User data with role:", { storedUser, storedRole, user }); // Debug
+  }, []);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -88,7 +92,7 @@ export default function UserDropdown() {
             <DropdownItem
               onItemClick={closeDropdown}
               tag="a"
-              to="/profile"
+              to={user?.role === "ROLE_ADMIN" ? "/admin-profile" : "/profile"} // So sánh chính xác với "ROLE_ADMIN"
               className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               Edit profile
