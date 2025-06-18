@@ -1,3 +1,4 @@
+// PayrollDashboard.tsx
 import React, { useState, useEffect } from "react";
 import { PayrollService } from "@/service/PayrollService";
 import { PayrollSummary, Employee } from "@/types/type";
@@ -270,31 +271,31 @@ const PayrollDashboard: React.FC = () => {
                             <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
                                 <thead className="bg-gray-50 dark:bg-gray-900">
                                     <tr className="dark:bg-gray-900">
-                                        {/* Removed w-[X%] and carefully applied min-w for columns that need it. */}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
+                                        {/* Adjusted min-w for "Nhân viên" to be slightly smaller if possible, but kept it reasonable */}
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[120px]">
                                             Nhân viên
                                         </th>
-                                        {/* Adjusted min-w for "Kỳ lương" as it contains date ranges */}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[180px]">
+                                        {/* Adjusted min-w for "Kỳ lương" as it contains date ranges, allowing for more compact display if needed */}
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
                                             Kỳ lương
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Lương cơ bản
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Hoa hồng
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Tổng lương
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Số luợng hoàn thành
                                         </th>
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                             Trạng thái
                                         </th>
-                                        {/* Adjusted min-w for "Hành động" as it contains multiple interactive elements */}
-                                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[160px]">
+                                        {/* Adjusted min-w for "Hành động" to be more responsive, allowing items to stack */}
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[140px]">
                                             Hành động
                                         </th>
                                     </tr>
@@ -315,36 +316,37 @@ const PayrollDashboard: React.FC = () => {
                                     ) : (
                                         payrolls.map((payroll) => (
                                             <tr key={payroll.payrollId} className="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                                <td className="px-6 py-4 overflow-hidden text-ellipsis dark:text-gray-100">
+                                                <td className="px-4 py-3 overflow-hidden text-ellipsis dark:text-gray-100">
                                                     {getEmployeeDisplayName(payroll.employee)}
                                                 </td>
                                                 {/* Ensure date format is compact and consider flex-wrap if dates are too long */}
-                                                <td className="px-6 py-4 dark:text-gray-100 flex flex-col justify-center">
+                                                <td className="px-4 py-3 dark:text-gray-100 flex flex-col justify-center text-sm"> {/* Added text-sm for smaller font */}
                                                     <span>{format(new Date(payroll.periodStartDate), "dd/MM/yyyy", { locale: vi })}</span>
                                                     <span>- {format(new Date(payroll.periodEndDate), "dd/MM/yyyy", { locale: vi })}</span>
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                <td className="px-4 py-3 whitespace-nowrap dark:text-gray-100 text-sm">
                                                     {Math.floor(payroll.baseSalary).toLocaleString("vi-VN")} VND
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                <td className="px-4 py-3 whitespace-nowrap dark:text-gray-100 text-sm">
                                                     {Math.floor(payroll.totalCommission).toLocaleString("vi-VN")} VND
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                <td className="px-4 py-3 whitespace-nowrap dark:text-gray-100 text-sm font-semibold"> {/* Made total amount slightly bolder */}
                                                     {Math.floor(payroll.totalAmount).toLocaleString("vi-VN")} VND
                                                 </td>
-                                                <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                <td className="px-4 py-3 whitespace-nowrap dark:text-gray-100 text-center"> {/* Centered total appointments */}
                                                     {payroll.totalAppointments}
                                                 </td>
-                                                <td className="px-6 py-4">
-                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${payroll.status === 'PAID' ? 'bg-green-100 text-green-800' :
-                                                            payroll.status === 'APPROVED' ? 'bg-blue-100 text-blue-800' :
-                                                                payroll.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800' :
-                                                                    'bg-gray-100 text-gray-800'
+                                                <td className="px-4 py-3">
+                                                    <span className={`px-2 py-1 rounded-full text-xs font-semibold ${payroll.status === 'PAID' ? 'bg-green-100 text-green-800 dark:bg-green-700 dark:text-green-100' :
+                                                            payroll.status === 'APPROVED' ? 'bg-blue-100 text-blue-800 dark:bg-blue-700 dark:text-blue-100' :
+                                                                payroll.status === 'PENDING' ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-700 dark:text-yellow-100' :
+                                                                    payroll.status === 'DRAFT' ? 'bg-gray-200 text-gray-700 dark:bg-gray-600 dark:text-gray-200' : // Added distinct DRAFT style
+                                                                    'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-200'
                                                         }`}>
                                                         {payroll.status}
                                                     </span>
                                                 </td>
-                                                <td className="px-6 py-4">
+                                                <td className="px-4 py-3">
                                                     {payroll.status === "DRAFT" && (
                                                         <div className="flex flex-col gap-2 items-stretch text-sm">
                                                             <select
@@ -396,7 +398,7 @@ const PayrollDashboard: React.FC = () => {
                         >
                             Trang trước
                         </button>
-                        <span className="text-gray-700 dark:text-gray-200">
+                        <span className="text-gray-700 dark:text-gray-200 text-sm"> {/* Smaller font for pagination text */}
                             Trang {pagination.currentPage} /{" "}
                             {pagination.totalPages}
                         </span>
@@ -413,8 +415,8 @@ const PayrollDashboard: React.FC = () => {
 
                     {/* Modal for creating payroll */}
                     {showDialog && (
-                        <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 dark:bg-black/60">
-                            <div className="relative w-full max-w-3xl max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
+                        <div className="fixed inset-0 z-[500] flex items-center justify-center bg-black/40 dark:bg-black/60"> {/* Increased z-index */}
+                            <div className="relative w-full max-w-lg max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6"> {/* Reduced max-w for modal */}
                                 <button
                                     onClick={() => setShowDialog(false)}
                                     className="absolute top-3 right-3 text-gray-400 hover:text-red-500 dark:hover:text-red-400 transition"
@@ -425,7 +427,7 @@ const PayrollDashboard: React.FC = () => {
                                 <h2 className="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-100">
                                     Tạo bảng lương
                                 </h2>
-                                <form onSubmit={(e) => { e.preventDefault(); handleGeneratePayroll(); }} className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <form onSubmit={(e) => { e.preventDefault(); handleGeneratePayroll(); }} className="w-full grid grid-cols-1 gap-4"> {/* Simplified grid to single column */}
                                     <div>
                                         <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                                             Chọn nhân viên
@@ -456,7 +458,7 @@ const PayrollDashboard: React.FC = () => {
                                             className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700"
                                         />
                                     </div>
-                                    <div className="md:col-span-2">
+                                    <div> {/* No longer need md:col-span-2 as it's a single column grid */}
                                         <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
                                             Ngày kết thúc
                                         </Label>
