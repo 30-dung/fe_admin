@@ -14,10 +14,9 @@ interface User {
     email: string;
     phoneNumber: string;
     membershipType: string;
-    loyaltyPoints: number;
 }
 
-const membershipTypes = ["REGULAR", "VIP", "PREMIUM"];
+const membershipTypes = ["REGULAR", "VIP", "PRO"];
 
 export function Customer() {
     const [users, setUsers] = useState<User[]>([]);
@@ -34,7 +33,6 @@ export function Customer() {
         email: "",
         phoneNumber: "",
         membershipType: "",
-        loyaltyPoints: 0,
         password: "",
     });
 
@@ -98,7 +96,6 @@ export function Customer() {
                 email: user.email,
                 phoneNumber: user.phoneNumber,
                 membershipType: user.membershipType,
-                loyaltyPoints: user.loyaltyPoints,
             });
         } else {
             setFormData({
@@ -106,7 +103,6 @@ export function Customer() {
                 email: "",
                 phoneNumber: "",
                 membershipType: "",
-                loyaltyPoints: 0,
                 password: "",
             });
         }
@@ -178,12 +174,12 @@ export function Customer() {
                             ))}
                         </select>
                         {/* Nút thêm */}
-                        <button
+                        {/* <button
                             onClick={() => openModal("add")}
                             className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-colors"
                         >
                             Thêm khách hàng mới
-                        </button>
+                        </button> */}
                     </div>
 
                     {/* Customer Table */}
@@ -206,9 +202,7 @@ export function Customer() {
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Loại thành viên
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
-                                        Điểm
-                                    </th>
+
                                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
                                         Hành động
                                     </th>
@@ -245,9 +239,7 @@ export function Customer() {
                                             <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
                                                 {user.membershipType}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
-                                                {user.loyaltyPoints}
-                                            </td>
+
                                             <td className="px-6 py-4 whitespace-nowrap space-x-3">
                                                 <button
                                                     onClick={() =>
@@ -328,14 +320,7 @@ export function Customer() {
                                                     {formData.membershipType}
                                                 </p>
                                             </div>
-                                            <div>
-                                                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                    Điểm tích lũy
-                                                </Label>
-                                                <p className="mt-1 text-gray-900 dark:text-gray-100">
-                                                    {formData.loyaltyPoints}
-                                                </p>
-                                            </div>
+
                                             <div className="md:col-span-2 flex justify-end">
                                                 <button
                                                     onClick={closeModal}
@@ -437,21 +422,7 @@ export function Customer() {
                                                 ))}
                                             </select>
                                         </div>
-                                        <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
-                                                Điểm tích lũy
-                                            </Label>
-                                            <input
-                                                type="number"
-                                                name="loyaltyPoints"
-                                                value={
-                                                    formData.loyaltyPoints || ""
-                                                }
-                                                onChange={handleInputChange}
-                                                min={0}
-                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700"
-                                            />
-                                        </div>
+
                                         <div className="col-span-full flex justify-end gap-3 mt-4">
                                             <button
                                                 type="button"
