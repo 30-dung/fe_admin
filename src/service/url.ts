@@ -21,15 +21,15 @@ const url = {
         ALL: "/store/all",
         CITIES: "/store/cities",
         DISTRICTS: "/store/districts",
-        GET_BY_ID: 'store',
+        GET_BY_ID: "store",
     },
 
     STORE_SERVICE: {
-        GET_BY_STORE: 'store-service/store',
-        CREATE_PRICE: 'store-service/price',
-        GET_ALL: 'store-service/all',
-        DELETE: 'store-service/${id}',
-        UPDATE: 'store-service/${id}',
+        GET_BY_STORE: "store-service/store",
+        CREATE_PRICE: "store-service/price",
+        GET_ALL: "store-service/all",
+        DELETE: "store-service/${id}",
+        UPDATE: "store-service/${id}",
     },
 
     EMPLOYEE: {
@@ -37,7 +37,8 @@ const url = {
         GET_BY_STORE: "employees/store/{storeId}",
         CREATE: "employees/create",
         GET_PENDING_APPOINTMENTS: "employees/pending",
-        UPDATE_APPOINTMENT_STATUS: "employees/appointments/{appointmentId}/status?action={action}",
+        UPDATE_APPOINTMENT_STATUS:
+            "employees/appointments/{appointmentId}/status?action={action}",
         GET_ALL: "employees/all",
     },
 
@@ -47,22 +48,22 @@ const url = {
     },
 
     APPOINTMENT: {
-        CREATE: 'appointments',
-        GET_ALL: 'appointments',
-        GET_BY_ID: 'appointments/${id}',
-        UPDATE: 'appointments/${id}',
-        DELETE: 'appointments/${id}',
-        GET_BY_USER: 'appointments/user/{email}',
-        GET_BY_EMPLOYEE: 'appointments/employee/{email}',
-        CONFIRM: 'appointments/${id}/confirm',
-        CANCEL: 'appointments/${id}/cancel',
-        COMPLETE: 'appointments/${id}/complete',
+        CREATE: "appointments",
+        GET_ALL: "appointments",
+        GET_BY_ID: "appointments/${id}",
+        UPDATE: "appointments/${id}",
+        DELETE: "appointments/${id}",
+        GET_BY_USER: "appointments/user/{email}",
+        GET_BY_EMPLOYEE: "appointments/employee/{email}",
+        CONFIRM: "appointments/${id}/confirm",
+        CANCEL: "appointments/${id}/cancel",
+        COMPLETE: "appointments/${id}/complete",
         FILTER: "appointments/filter",
     },
     SERVICE: {
-        GET_ALL: "services", 
+        GET_ALL: "services",
         GET_BY_ID: "services/${id}",
-        CREATE: "services", 
+        CREATE: "services",
         UPDATE: "services/${id}",
         DELETE: "services/${id}",
     },
@@ -75,6 +76,13 @@ const url = {
         APPROVE_PAYROLL: "salary/approve",
         MARK_PAID: "salary/mark-paid",
         EMPLOYEES: "salary/employees",
+    },
+    CUSTOMER: {
+        CREATE: "user/customer/create",
+        UPDATE: "user/custome/update/{userId}",
+        DELETE: "user/customer/delete/{userId}",
+        GET_ALL: "user/customer/all",
+        GET_BY_ID: "user/customer/{userId}",
     },
 };
 

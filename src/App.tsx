@@ -17,8 +17,9 @@ import ServiceManager from "pages/sm/ServiceManager";
 import EmployeeList from "pages/Hrm/GetEmp";
 import EmployeePayroll from "./pages/Payroll/EmployeePayroll";
 import PayrollDashboard from "./pages/Payroll/PayrollDashboard";
-import { AuthProvider } from '@/context/AuthContext';
+import { AuthProvider } from "@/context/AuthContext";
 import AdminAppointments from "./pages/AllAppoiment/AdminAppointments";
+import Customer from "./pages/cm/Customer";
 import AdminProfiles from "pages/AdminProfiles";
 // import PrivateRoute from "./components/common/PrivateRoute";
 
@@ -46,7 +47,10 @@ export default function App() {
                             <Route index path="/" element={<Homes />} />
                             {/* Others Page */}
                             <Route path="/profile" element={<UserProfiles />} />
-                            <Route path="/admin-profile" element={<AdminProfiles />} />
+                            <Route
+                                path="/admin-profile"
+                                element={<AdminProfiles />}
+                            />
                             <Route path="/calendar" element={<Calendar />} />
                             {/* Forms */}
                             <Route
@@ -60,7 +64,6 @@ export default function App() {
                             />
                             {/* Store */}
                             <Route path={routes.store} element={<Store />} />
-
                             {/* Human Resources Management */}
                             <Route
                                 path={routes.ce}
@@ -75,9 +78,24 @@ export default function App() {
                                 path={routes.serviceManager}
                                 element={<ServiceManager />}
                             />
-                            <Route path={routes.payrollDashboard} element={<PayrollDashboard />} /> {/* Thêm route */}
-                            <Route path={routes.employeePayroll} element={<EmployeePayroll />} /> {/* Thêm route */}
-                            <Route path={routes.adminAppointments} element={<AdminAppointments />} />
+                            <Route
+                                path={routes.payrollDashboard}
+                                element={<PayrollDashboard />}
+                            />{" "}
+                            {/* Thêm route */}
+                            <Route
+                                path={routes.employeePayroll}
+                                element={<EmployeePayroll />}
+                            />{" "}
+                            {/* Thêm route */}
+                            <Route
+                                path={routes.adminAppointments}
+                                element={<AdminAppointments />}
+                            />
+                            <Route
+                                path={routes.customer}
+                                element={<Customer />}
+                            />
                         </Route>
                     </Route>
                 </Routes>
