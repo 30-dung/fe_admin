@@ -143,9 +143,9 @@ const EmployeeList: React.FC = () => {
                                     <th className="py-2 dark:text-gray-400">
                                         Loại lương
                                     </th>
-                                    <th className="py-2 dark:text-gray-400">
+                                    {/* <th className="py-2 dark:text-gray-400">
                                         Trạng thái
-                                    </th>
+                                    </th> */}
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,7 +190,7 @@ const EmployeeList: React.FC = () => {
                                         <td className="py-2 dark:text-gray-400">
                                             {salaryTypeLabel[emp.salaryType]}
                                         </td>
-                                        <td className="py-2">
+                                        {/* <td className="py-2">
                                             {emp.isActive ? (
                                                 <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
                                                     Đang làm
@@ -200,7 +200,7 @@ const EmployeeList: React.FC = () => {
                                                     Nghỉ
                                                 </span>
                                             )}
-                                        </td>
+                                        </td> */}
                                     </tr>
                                 ))}
                             </tbody>

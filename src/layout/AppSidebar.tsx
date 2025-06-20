@@ -40,6 +40,7 @@ const navItems: NavItem[] = [
         path: "/",
         roles: ["ROLE_ADMIN", "ROLE_EMPLOYEE"],
     },
+
     {
         icon: <GridIcon />,
         name: "Quản lý cửa hàng",
@@ -53,7 +54,7 @@ const navItems: NavItem[] = [
             },
             {
                 name: "Dịch vụ",
-                path: "/store-service",
+                path: "/service-manager",
                 pro: false,
                 roles: ["ROLE_ADMIN"],
             },
@@ -86,12 +87,6 @@ const navItems: NavItem[] = [
         path: "/calendar",
         roles: ["ROLE_EMPLOYEE"],
     },
-    {
-        icon: <UserCircleIcon />,
-        name: "Nhân viên",
-        path: "/profile",
-        roles: ["ROLE_EMPLOYEE"],
-    },
 
     {
         name: "Cuộc hẹn",
@@ -101,32 +96,29 @@ const navItems: NavItem[] = [
     },
 
     {
-        name: "Quản lý dịch vụ",
+        name: "Quản lý bảng lương",
         icon: <GridIcon />,
+        path: routes.payrollDashboard,
         roles: ["ROLE_ADMIN"],
-        subItems: [
-            {
-                name: "Dịch vụ",
-                path: "/service-manager",
-                pro: false,
-                roles: ["ROLE_ADMIN"],
-            },
-        ],
     },
-
     {
-    name: "Quản lý bảng lương",
-    icon: <GridIcon />,
-    path: routes.payrollDashboard,
-    roles: ["ROLE_ADMIN"],
-  },
-  {
-    name: "Bảng lương của tôi",
-    icon: <UserCircleIcon />,
-    path: routes.employeePayroll,
-    roles: ["ROLE_EMPLOYEE"],
-  },
-
+        name: "Bảng lương của tôi",
+        icon: <UserCircleIcon />,
+        path: routes.employeePayroll,
+        roles: ["ROLE_EMPLOYEE"],
+    },
+    {
+        name: "Quản lý lịch hẹn",
+        icon: <TableIcon />,
+        path: "/admin-appointments",
+        roles: ["ROLE_ADMIN"],
+    },
+    {
+        icon: <UserCircleIcon />,
+        name: "Quản lý khách hàng",
+        path: "/customer",
+        roles: ["ROLE_ADMIN"],
+    },
 ];
 
 interface AppSidebarProps {

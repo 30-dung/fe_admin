@@ -148,7 +148,6 @@ export const PayrollService = {
     if (!response.data.success) {
       throw new Error(response.data.message || "Lỗi lấy danh sách nhân viên");
     }
-    console.log("Employees from API:", response.data.employees); // Debug log
     return {
       ...response.data,
       employees: response.data.employees || [],

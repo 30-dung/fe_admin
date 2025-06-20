@@ -19,14 +19,9 @@ export interface Employee {
   active?: boolean;
 }
 
-export interface EmployeeReference {
-  employeeId: number;
-  // Thêm các trường khác nếu API trả về thêm (kiểm tra log)
-}
-
 export interface PayrollSummary {
   payrollId: number;
-  employee: EmployeeReference; // Thay đổi từ number thành object
+  employee: number | Employee; // <--- SỬA TẠI ĐÂY
   periodStartDate: string;
   periodEndDate: string;
   baseSalary: number;
@@ -39,20 +34,6 @@ export interface PayrollSummary {
   approvedAt?: string;
   paidAt?: string;
   approvedBy?: number;
-  notes?: string;
-}
-
-export interface SalaryRecord {
-  salaryRecordId: number;
-  employee: number;
-  appointment: number;
-  serviceAmount: number;
-  commissionAmount: number;
-  commissionRate: number;
-  workDate: string;
-  paymentStatus: "PENDING" | "PAID" | "CANCELLED";
-  createdAt: string;
-  paidAt?: string;
   notes?: string;
 }
 
