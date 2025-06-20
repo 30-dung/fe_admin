@@ -9,7 +9,8 @@ const routes = {
     storeService: "/store-service",
     serviceManager: "/service-manager",
     payrollDashboard: "/payroll-dashboard", // Route cho admin quản lý lương
-     employeePayroll: "/my-payroll", // Route cho nhân viên xem lương
-     adminAppointments: "/admin-appointments"
+    employeePayroll: "/my-payroll", // Route cho nhân viên xem lương
+    adminAppointments: "/admin-appointments",
+    customer: "/customer",
 };
 export default routes;
