@@ -17,34 +17,45 @@ interface Employee {
   phoneNumber?: string;
   specialization?: string;
   storeId?: string;
+  store?: {
+    id: string;
+    storeName?: string;
+  };
 }
-
-interface Store {
-  id: string;
-  name: string;
-
-}
-
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
   const [employee, setEmployee] = useState<Employee | null>(null);
-  const [store, setStore] = useState<Store | null>(null);
 
- useEffect(() => {
+  // Hàm chuyển đổi định dạng ngày thành "DD/MM/YYYY" một cách linh hoạt
+  const formatDate = (dateStr: string | undefined): string => {
+    if (!dateStr) return "";
+    try {
+      // Xử lý nếu ngày có định dạng phức tạp (ví dụ: "21T00:00:00/09/1990" hoặc "1990-09-21T00:00:00Z")
+      let datePart = dateStr;
+      if (dateStr.includes("T")) {
+        datePart = dateStr.split("T")[0]; // Lấy phần trước "T" (ví dụ: "1990-09-21")
+      } else if (dateStr.includes("/")) {
+        datePart = dateStr.split("/")[2] + "-" + dateStr.split("/")[1] + "-" + dateStr.split("/")[0]; // Chuyển "DD/MM/YYYY" sang "YYYY-MM-DD" tạm thời
+      }
+      const [year, month, day] = datePart.split("-");
+      return `${day}/${month}/${year}`;
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateStr || "";
+    }
+  };
+
+  useEffect(() => {
     axios
-      .get(url.EMPLOYEE.PROFILE)
+      .get(url.EMPLOYEE.PROFILE, {
+        headers: { Authorization: `Bearer ${localStorage.getItem("token") || ""}` },
+      })
       .then((res) => {
         setEmployee(res.data);
-        // Sau khi có employee, lấy thông tin store
-        if (res.data.storeId) {
-          axios
-            .get(`${url.STORE.ALL}/${res.data.storeId}`)
-            .then((storeRes) => setStore(storeRes.data))
-            .catch(() => setStore(null));
-        }
+        console.log("Employee data:", res.data); // Debug: Kiểm tra dữ liệu employee
       })
-      .catch(() =>
+      .catch((error) =>
         setEmployee({
           fullName: "",
           avatarUrl: "/images/user/owner.jpg",
@@ -60,7 +71,6 @@ export default function UserInfoCard() {
   }, []);
 
   const handleSave = () => {
-    // Handle save logic here
     console.log("Saving changes...");
     closeModal();
   };
@@ -72,16 +82,17 @@ export default function UserInfoCard() {
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
             Personal Information
           </h4>
-          {/* Hiển thị Full Name */}
-          <div className="mb-6">
-            <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-              Full Name
-            </p>
-            <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-              {employee?.fullName || ""}
-            </p>
+          <div className="flex flex-col items-center w-full gap-6 lg:flex-row lg:items-start">
+            <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
+              <img src={employee?.avatarUrl || "/images/user/owner.jpg"} alt="user" />
+            </div>
+            <div>
+              <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 lg:text-left" style={{ marginTop: 25 }}>
+                {employee?.fullName || ""}
+              </h4>
+            </div>
           </div>
-          <div className="grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
+          <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
                 Email address
@@ -127,7 +138,7 @@ export default function UserInfoCard() {
                 Store
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {store?.name || ""}
+                {employee?.store?.storeName || "Not available"}
               </p>
             </div>
             <div>
@@ -135,7 +146,7 @@ export default function UserInfoCard() {
                 Date of Birth
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {employee?.dateOfBirth || ""}
+                {formatDate(employee?.dateOfBirth)}
               </p>
             </div>
           </div>
@@ -198,16 +209,8 @@ export default function UserInfoCard() {
                   <Input type="text" value={employee?.phoneNumber || ""} />
                 </div>
                 <div>
-                  <Label>Specialization</Label>
-                  <Input type="text" value={employee?.specialization || ""} />
-                </div>
-                <div>
-                  <Label>Store ID</Label>
-                  <Input type="text" value={employee?.storeId || ""} />
-                </div>
-                <div>
                   <Label>Date of Birth</Label>
-                  <Input type="text" value={employee?.dateOfBirth || ""} />
+                  <Input type="text" value={formatDate(employee?.dateOfBirth) || ""} />
                 </div>
               </div>
             </div>

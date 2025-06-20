@@ -87,12 +87,6 @@ const navItems: NavItem[] = [
         path: "/calendar",
         roles: ["ROLE_EMPLOYEE"],
     },
-    {
-        icon: <UserCircleIcon />,
-        name: "Nhân viên",
-        path: "/profile",
-        roles: ["ROLE_EMPLOYEE"],
-    },
 
     {
         name: "Cuộc hẹn",

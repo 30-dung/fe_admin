@@ -20,6 +20,7 @@ import PayrollDashboard from "./pages/Payroll/PayrollDashboard";
 import { AuthProvider } from "@/context/AuthContext";
 import AdminAppointments from "./pages/AllAppoiment/AdminAppointments";
 import Customer from "./pages/cm/Customer";
+import AdminProfiles from "pages/AdminProfiles";
 // import PrivateRoute from "./components/common/PrivateRoute";
 
 export default function App() {
@@ -46,6 +47,10 @@ export default function App() {
                             <Route index path="/" element={<Homes />} />
                             {/* Others Page */}
                             <Route path="/profile" element={<UserProfiles />} />
+                            <Route
+                                path="/admin-profile"
+                                element={<AdminProfiles />}
+                            />
                             <Route path="/calendar" element={<Calendar />} />
                             {/* Forms */}
                             <Route

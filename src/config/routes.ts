@@ -2,7 +2,7 @@ const routes = {
     dashboard: "/homes",
     profile: "/profile",
     calendar: "/calendar",
-    basicTables: "/basic-tables",
+    appointment: "/basic-tables",
     ce: "/create-employee",
     ge: "/employee-list",
     store: "/store",
