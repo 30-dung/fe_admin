@@ -84,6 +84,8 @@ const PayrollDashboard: React.FC = () => {
         try {
             const response = await PayrollService.processUnprocessedAppointments();
             toast.success(response.message);
+            // Sau khi xử lý các cuộc hẹn chưa tính lương, cần tải lại bảng lương
+            // Có thể giữ nguyên trang hiện tại hoặc reset về trang 1 tùy ý
             fetchAllPayrolls(pagination.currentPage, pagination.pageSize, year, month, selectedEmployee);
         } catch (error: any) {
             toast.error(`Lỗi: ${error.message}`);
@@ -102,7 +104,9 @@ const PayrollDashboard: React.FC = () => {
                 endDate
             );
             toast.success(response.message);
-            fetchAllPayrolls(pagination.currentPage, pagination.pageSize, year, month, selectedEmployee);
+            // Đặt lại về trang 1 và tải lại dữ liệu để hiển thị bảng lương mới
+            setPagination(prev => ({ ...prev, currentPage: 1 }));
+            fetchAllPayrolls(1, pagination.pageSize, year, month, selectedEmployee);
             setShowDialog(false);
             setSelectedEmployee(null);
             setStartDate("");
@@ -250,17 +254,17 @@ const PayrollDashboard: React.FC = () => {
                     </div>
 
                     <div className="mb-6 flex flex-wrap gap-4">
-                        <button
+                        {/* <button
                             onClick={() => setShowDialog(true)}
                             className="bg-blue-500 text-white px-6 py-2 rounded-md hover:bg-blue-600 transition-colors flex-grow sm:flex-grow-0"
                         >
                             Tạo bảng lương
-                        </button>
+                        </button> */}
                         <button
                             onClick={handleProcessUnprocessed}
                             className="bg-green-500 text-white px-6 py-2 rounded-md hover:bg-green-600 transition-colors flex-grow sm:flex-grow-0"
                         >
-                            Tính lương cho các cuộc hẹn chưa xử lý
+                            Tính lương
                         </button>
                     </div>
 
@@ -276,7 +280,7 @@ const PayrollDashboard: React.FC = () => {
                                             Nhân viên
                                         </th>
                                         {/* Adjusted min-w for "Kỳ lương" as it contains date ranges, allowing for more compact display if needed */}
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[150px]">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[120px]"> {/* Adjusted min-w */}
                                             Kỳ lương
                                         </th>
                                         <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
@@ -295,7 +299,7 @@ const PayrollDashboard: React.FC = () => {
                                             Trạng thái
                                         </th>
                                         {/* Adjusted min-w for "Hành động" to be more responsive, allowing items to stack */}
-                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[140px]">
+                                        <th className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider min-w-[100px]"> {/* Adjusted min-w */}
                                             Hành động
                                         </th>
                                     </tr>
