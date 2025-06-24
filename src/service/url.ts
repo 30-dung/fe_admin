@@ -34,6 +34,8 @@ const url = {
 
     EMPLOYEE: {
         PROFILE: "employees/profile",
+        UPDATE_PROFILE: "employees/update-profile",
+        UPDATE_PASSWORD: "employees/update-profile/password",
         GET_BY_STORE: "employees/store/{storeId}",
         CREATE: "employees/create",
         GET_PENDING_APPOINTMENTS: "employees/pending",

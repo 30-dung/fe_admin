@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
@@ -25,27 +25,56 @@ interface Employee {
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
+  const [isPasswordModalOpen, setIsPasswordModalOpen] = useState(false);
   const [employee, setEmployee] = useState<Employee | null>(null);
+  const [formData, setFormData] = useState<Employee>({});
+  const [passwordData, setPasswordData] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
 
-  // Hàm chuyển đổi định dạng ngày thành "DD/MM/YYYY" một cách linh hoạt
+  // Format date to "DD/MM/YYYY" for display
   const formatDate = (dateStr: string | undefined): string => {
     if (!dateStr) return "";
     try {
-      // Xử lý nếu ngày có định dạng phức tạp (ví dụ: "21T00:00:00/09/1990" hoặc "1990-09-21T00:00:00Z")
       let datePart = dateStr;
-      if (dateStr.includes("T")) {
-        datePart = dateStr.split("T")[0]; // Lấy phần trước "T" (ví dụ: "1990-09-21")
-      } else if (dateStr.includes("/")) {
-        datePart = dateStr.split("/")[2] + "-" + dateStr.split("/")[1] + "-" + dateStr.split("/")[0]; // Chuyển "DD/MM/YYYY" sang "YYYY-MM-DD" tạm thời
+      if (dateStr.includes("/")) {
+        const [day, month, year] = dateStr.split("/");
+        datePart = `${year}-${month}-${day}`;
+      } else if (dateStr.includes("T")) {
+        datePart = dateStr.split("T")[0];
       }
-      const [year, month, day] = datePart.split("-");
-      return `${day}/${month}/${year}`;
+      const date = new Date(datePart);
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
+      return `${String(date.getDate()).padStart(2, "0")}/${String(date.getMonth() + 1).padStart(2, "0")}/${date.getFullYear()}`;
     } catch (error) {
       console.error("Error formatting date:", error);
-      return dateStr || "";
+      return "";
     }
   };
 
+  // Format date to "YYYY-MM-DD" for input value
+  const formatDateForInput = (dateStr: string | undefined): string => {
+    if (!dateStr) return "";
+    try {
+      let datePart = dateStr;
+      if (dateStr.includes("/")) {
+        const [day, month, year] = dateStr.split("/");
+        datePart = `${year}-${month}-${day}`;
+      } else if (dateStr.includes("T")) {
+        datePart = dateStr.split("T")[0];
+      }
+      const date = new Date(datePart);
+      if (isNaN(date.getTime())) throw new Error("Invalid date");
+      return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
+    } catch (error) {
+      console.error("Error formatting date for input:", error);
+      return "";
+    }
+  };
+
+  // Fetch employee data
   useEffect(() => {
     axios
       .get(url.EMPLOYEE.PROFILE, {
@@ -53,9 +82,11 @@ export default function UserInfoCard() {
       })
       .then((res) => {
         setEmployee(res.data);
-        console.log("Employee data:", res.data); // Debug: Kiểm tra dữ liệu employee
+        setFormData(res.data);
+        console.log("Employee data:", res.data);
       })
-      .catch((error) =>
+      .catch((error) => {
+        console.error("Error fetching employee data:", error);
         setEmployee({
           fullName: "",
           avatarUrl: "/images/user/owner.jpg",
@@ -66,13 +97,121 @@ export default function UserInfoCard() {
           phoneNumber: "",
           specialization: "",
           storeId: "",
-        })
-      );
+        });
+        setFormData({
+          fullName: "",
+          email: "",
+          employeeCode: "",
+          gender: "",
+          phoneNumber: "",
+          dateOfBirth: "",
+        });
+      });
   }, []);
 
-  const handleSave = () => {
-    console.log("Saving changes...");
-    closeModal();
+  // Handle input changes for profile form
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle input changes for password form
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setPasswordData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  // Handle profile update
+  const handleSaveProfile = async () => {
+    try {
+      if (!formData.fullName || !formData.email) {
+        alert("Họ tên và Email là bắt buộc.");
+        return;
+      }
+      if (formData.dateOfBirth) {
+        const date = new Date(formData.dateOfBirth);
+        if (isNaN(date.getTime())) {
+          alert("Ngày sinh không hợp lệ.");
+          return;
+        }
+      }
+
+      const formattedData = {
+        fullName: formData.fullName,
+        email: formData.email,
+        employeeCode: formData.employeeCode || "",
+        gender: formData.gender || "",
+        phoneNumber: formData.phoneNumber || "",
+        avatarUrl: formData.avatarUrl || "",
+        specialization: formData.specialization || "",
+        dateOfBirth: formData.dateOfBirth || "",
+      };
+
+      console.log("Dữ liệu gửi:", formattedData);
+
+      const response = await axios.put(url.EMPLOYEE.UPDATE_PROFILE, formattedData, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      setEmployee(formattedData);
+      alert("Cập nhật hồ sơ thành công!");
+      closeModal();
+    } catch (error: any) {
+      console.error("Lỗi cập nhật hồ sơ:", error.response?.data || error.message);
+      alert(
+        error.response?.data?.message ||
+          "Cập nhật hồ sơ thất bại. Vui lòng thử lại."
+      );
+    }
+  };
+
+  // Handle password update
+  const handleSavePassword = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!passwordData.currentPassword) {
+      alert("Vui lòng nhập mật khẩu hiện tại.");
+      return;
+    }
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      alert("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+      return;
+    }
+    if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(passwordData.newPassword)) {
+      alert("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");
+      return;
+    }
+
+    try {
+      const response = await axios.put(
+        url.EMPLOYEE.UPDATE_PASSWORD,
+        {
+          currentPassword: passwordData.currentPassword,
+          newPassword: passwordData.newPassword,
+          confirmNewPassword: passwordData.confirmPassword,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("token") || ""}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      console.log("Password update response:", response.data);
+      alert("Đổi mật khẩu thành công!");
+      setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
+      setIsPasswordModalOpen(false);
+    } catch (error: any) {
+      const errorMessage =
+        error.response?.data?.errors?.map((err: any) => err.defaultMessage).join("; ") ||
+        error.response?.data?.message ||
+        "Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu hiện tại hoặc thử lại.";
+      console.error("Error updating password:", error.response?.data || error.message);
+      alert(errorMessage);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
   };
 
   return (
@@ -130,7 +269,7 @@ export default function UserInfoCard() {
                 Specialization
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {employee?.specialization || ""}
+                {employee?.specialization || "Không có"}
               </p>
             </div>
             <div>
@@ -152,29 +291,53 @@ export default function UserInfoCard() {
           </div>
         </div>
 
-        <button
-          onClick={openModal}
-          className="flex w-full items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200 lg:inline-flex lg:w-auto"
-        >
-          <svg
-            className="fill-current"
-            width="18"
-            height="18"
-            viewBox="0 0 18 18"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
+        <div className="flex flex-row gap-3 lg:flex-row lg:items-end">
+          <button
+            onClick={openModal}
+            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
           >
-            <path
-              fillRule="evenodd"
-              clipRule="evenodd"
-              d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-              fill=""
-            />
-          </svg>
-          Edit
-        </button>
+            <svg
+              className="fill-current"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+                fill=""
+              />
+            </svg>
+            Edit
+          </button>
+          <button
+            onClick={() => setIsPasswordModalOpen(true)}
+            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
+          >
+            <svg
+              className="fill-current"
+              width="18"
+              height="18"
+              viewBox="0 0 18 18"
+              fill="none"
+              xmlns="http://www.w3.org/2000/svg"
+            >
+              <path
+                fillRule="evenodd"
+                clipRule="evenodd"
+                d="M9 2.25C6.92893 2.25 5.25 3.92893 5.25 6V7.5H4.5C3.67157 7.5 3 8.17157 3 9V15C3 15.8284 3.67157 16.5 4.5 16.5H13.5C14.3284 16.5 15 15.8284 15 15V9C15 8.17157 14.3284 7.5 13.5 7.5H12.75V6C12.75 3.92893 11.0711 2.25 9 2.25ZM6.75 6V7.5H11.25V6C11.25 4.75736 10.2426 3.75 9 3.75C7.75736 3.75 6.75 4.75736 6.75 6ZM9 12.75C9.62132 12.75 10.125 12.2463 10.125 11.625C10.125 11.0037 9.62132 10.5 9 10.5C8.37868 10.5 7.875 11.0037 7.875 11.625C7.875 12.2463 8.37868 12.75 9 12.75Z"
+                fill=""
+              />
+            </svg>
+            Change Password
+          </button>
+        </div>
       </div>
 
+      {/* Edit Profile Modal */}
       <Modal isOpen={isOpen} onClose={closeModal} className="max-w-[700px] m-4">
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
@@ -190,27 +353,77 @@ export default function UserInfoCard() {
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
                   <Label>Full Name</Label>
-                  <Input type="text" value={employee?.fullName || ""} />
+                  <Input
+                    type="text"
+                    name="fullName"
+                    value={formData?.fullName || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div>
                   <Label>Email</Label>
-                  <Input type="text" value={employee?.email || ""} />
+                  <Input
+                    type="text"
+                    name="email"
+                    value={formData?.email || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div>
                   <Label>Employee Code</Label>
-                  <Input type="text" value={employee?.employeeCode || ""} />
+                  <Input
+                    type="text"
+                    name="employeeCode"
+                    value={formData?.employeeCode || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div>
                   <Label>Gender</Label>
-                  <Input type="text" value={employee?.gender || ""} />
+                  <Input
+                    type="text"
+                    name="gender"
+                    value={formData?.gender || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div>
                   <Label>Phone Number</Label>
-                  <Input type="text" value={employee?.phoneNumber || ""} />
+                  <Input
+                    type="text"
+                    name="phoneNumber"
+                    value={formData?.phoneNumber || ""}
+                    onChange={handleInputChange}
+                  />
                 </div>
                 <div>
                   <Label>Date of Birth</Label>
-                  <Input type="text" value={formatDate(employee?.dateOfBirth) || ""} />
+                  <Input
+                    type="date"
+                    name="dateOfBirth"
+                    value={formatDateForInput(formData?.dateOfBirth)}
+                    onChange={handleInputChange}
+                  />
+                </div>
+                <div>
+                  <Label>Avatar URL</Label>
+                  <Input
+                    type="text"
+                    name="avatarUrl"
+                    value={formData?.avatarUrl || ""}
+                    onChange={handleInputChange}
+                    placeholder="Nhập URL ảnh đại diện"
+                  />
+                </div>
+                <div>
+                  <Label>Specialization</Label>
+                  <Input
+                    type="text"
+                    name="specialization"
+                    value={formData?.specialization || ""}
+                    onChange={handleInputChange}
+                    placeholder="Nhập chuyên môn"
+                  />
                 </div>
               </div>
             </div>
@@ -218,7 +431,62 @@ export default function UserInfoCard() {
               <Button size="sm" variant="outline" onClick={closeModal}>
                 Close
               </Button>
-              <Button size="sm" onClick={handleSave}>
+              <Button size="sm" onClick={handleSaveProfile}>
+                Save Changes
+              </Button>
+            </div>
+          </form>
+        </div>
+      </Modal>
+
+      {/* Change Password Modal */}
+      <Modal isOpen={isPasswordModalOpen} onClose={() => setIsPasswordModalOpen(false)} className="max-w-[700px] m-4">
+        <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
+          <div className="px-2 pr-14">
+            <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
+              Change Password
+            </h4>
+            <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
+              Update your password to keep your account secure.
+            </p>
+          </div>
+          <form onSubmit={handleSavePassword} className="flex flex-col">
+            <div className="custom-scrollbar h-[300px] overflow-y-auto px-2 pb-3">
+              <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
+                <div>
+                  <Label>Current Password</Label>
+                  <Input
+                    type="password"
+                    name="currentPassword"
+                    value={passwordData.currentPassword}
+                    onChange={handlePasswordChange}
+                  />
+                </div>
+                <div>
+                  <Label>New Password</Label>
+                  <Input
+                    type="password"
+                    name="newPassword"
+                    value={passwordData.newPassword}
+                    onChange={handlePasswordChange}
+                  />
+                </div>
+                <div>
+                  <Label>Confirm New Password</Label>
+                  <Input
+                    type="password"
+                    name="confirmPassword"
+                    value={passwordData.confirmPassword}
+                    onChange={handlePasswordChange}
+                  />
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
+              <Button size="sm" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>
+                Close
+              </Button>
+              <Button size="sm" type="submit">
                 Save Changes
               </Button>
             </div>
