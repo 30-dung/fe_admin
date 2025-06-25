@@ -120,6 +120,12 @@ const navItems: NavItem[] = [
         path: "/customer",
         roles: ["ROLE_ADMIN"],
     },
+     {
+        icon: <CalenderIcon />,
+        name: "Lời góp ý",
+        path: "/feedback",
+        roles: ["ROLE_ADMIN"],
+    },
 ];
 
 // AppSidebarProps không cần userRole nữa vì sẽ lấy từ context

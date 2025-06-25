@@ -158,20 +158,26 @@ export default function AppointmentStatusMetrics() {
     return { displayText, badgeColor };
   };
 
+  const isAdmin = auth.role && auth.role.includes("ROLE_ADMIN");
+
   return (
-    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-4 md:gap-6">
+    <div className={`grid gap-4 md:gap-6 ${
+      isAdmin 
+        ? "grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5" 
+        : "grid-cols-1 sm:grid-cols-2 md:grid-cols-4"
+    }`}>
       {/* PENDING Appointments */}
       <div
         className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 cursor-pointer flex flex-col items-center justify-center text-center"
         onClick={() => handleNavigate("PENDING")}
       >
-        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800 mb-4"> {/* Thêm mb-4 */}
+        <div className="flex items-center justify-center w-12 h-12 bg-gray-100 rounded-xl dark:bg-gray-800 mb-4">
           <GroupIcon className="text-gray-800 size-6 dark:text-white/90" />
         </div>
-        <span className="text-sm text-gray-500 dark:text-gray-400 mb-1"> {/* Thêm mb-1 */}
+        <span className="text-sm text-gray-500 dark:text-gray-400 mb-1">
           Lịch hẹn chờ xác nhận
         </span>
-        <h4 className="font-bold text-gray-800 text-title-sm dark:text-white/90 mb-3"> {/* Thêm mb-3 */}
+        <h4 className="font-bold text-gray-800 text-title-sm dark:text-white/90 mb-3">
           {pendingCount.toLocaleString()}
         </h4>
         <Badge color={getBadgeDisplay("PENDING").badgeColor}>
@@ -236,8 +242,8 @@ export default function AppointmentStatusMetrics() {
         </Badge>
       </div>
 
-      {/* REJECTED Appointments (New Metric) */}
-      {auth.role && auth.role.includes("ROLE_ADMIN") && (
+      {/* REJECTED Appointments (Only for Admin) */}
+      {isAdmin && (
         <div
           className="rounded-2xl border border-gray-200 bg-white p-5 dark:border-gray-800 dark:bg-white/[0.03] md:p-6 cursor-pointer flex flex-col items-center justify-center text-center"
           onClick={() => handleNavigate("REJECTED")}

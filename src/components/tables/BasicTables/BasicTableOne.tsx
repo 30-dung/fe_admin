@@ -337,8 +337,8 @@ export default function BasicTableOne() {
             <option value="PENDING">Chờ xác nhận</option>
             <option value="CONFIRMED">Đã xác nhận</option>
             <option value="COMPLETED">Hoàn thành</option>
-            <option value="CANCELED">Đã hủy</option> {/* Added CANCELED option */}
-            <option value="REJECTED">Đã từ chối</option>
+            <option value="CANCELED">Đã hủy</option> 
+         
           </select>
           <select
             value={timeRangeFilter}

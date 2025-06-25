@@ -12,5 +12,6 @@ const routes = {
     employeePayroll: "/my-payroll", // Route cho nhân viên xem lương
     adminAppointments: "/admin-appointments",
     customer: "/customer",
+    adminFeedback: "/feedback",
 };
 export default routes;

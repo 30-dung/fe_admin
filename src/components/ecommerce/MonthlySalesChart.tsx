@@ -7,26 +7,57 @@ import { MoreDotIcon } from "../../icons";
 import { useState, useEffect } from "react";
 import api from "@/service/api"; // Import api instance
 import url from "@/service/url"; // Import url constants
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 export default function MonthlySalesChart() {
   const [monthlyServiceRegistrations, setMonthlyServiceRegistrations] = useState<number[]>(
     Array(12).fill(0) // Khởi tạo mảng 12 phần tử với giá trị 0 cho 12 tháng
   );
+  const { auth, isLoadingAuth } = useAuth(); // Lấy thông tin xác thực
 
   useEffect(() => {
     const fetchMonthlyRegistrations = async () => {
+      // Đảm bảo auth đã tải xong và người dùng đã xác thực
+      if (isLoadingAuth || !auth.isAuthenticated) {
+        console.log("MonthlySalesChart Debug: Auth loading or not authenticated, skipping count fetch.");
+        setMonthlyServiceRegistrations(Array(12).fill(0)); // Reset nếu chưa sẵn sàng
+        return;
+      }
+
       try {
-        const response = await api.get(url.APPOINTMENT.GET_ALL); // Sử dụng api.get và url.APPOINTMENT.GET_ALL
-        const appointments = response.data;
+        let appointments = [];
+        const currentYear = new Date().getFullYear();
+
+        if (auth.role && auth.role.includes("ROLE_ADMIN")) {
+          // Admin xem tất cả các cuộc hẹn
+          const response = await api.get(url.APPOINTMENT.GET_ALL);
+          appointments = response.data;
+          console.log("MonthlySalesChart Debug: Admin fetched all appointments.");
+        } else if (auth.role && auth.role.includes("ROLE_EMPLOYEE") && auth.email) {
+          // Employee chỉ xem cuộc hẹn của mình
+          // Lấy các cuộc hẹn của nhân viên cho năm hiện tại
+          const params = {
+            // Không cần truyền status nếu muốn lấy tất cả các trạng thái để thống kê
+            // startDate và endDate cho cả năm để đảm bảo lấy đủ dữ liệu thống kê tháng
+            startDate: `${currentYear}-01-01T00:00:00`,
+            endDate: `${currentYear}-12-31T23:59:59`
+          };
+          // Sử dụng endpoint GET_BY_EMPLOYEE và truyền email của nhân viên
+          const response = await api.get(`${url.APPOINTMENT.GET_BY_EMPLOYEE.replace("{email}", auth.email)}`, { params });
+          appointments = response.data;
+          console.log(`MonthlySalesChart Debug: Employee ${auth.email} fetched their appointments.`);
+        } else {
+          console.warn("MonthlySalesChart Debug: Role not recognized or email missing for fetching monthly registrations.");
+          setMonthlyServiceRegistrations(Array(12).fill(0));
+          return;
+        }
+
 
         // Xử lý dữ liệu để tính toán số lượng cuộc hẹn theo tháng
-        const currentYear = new Date().getFullYear(); // Lấy năm hiện tại
         const monthlyCounts = Array(12).fill(0); // Mảng cho 12 tháng
 
         appointments.forEach((appointment: any) => {
-          // Sử dụng startTime để tính tháng, hoặc createdAt nếu phù hợp hơn với "đăng ký"
-          // appointment.startTime là string "yyyy-MM-dd'T'HH:mm:ss" từ backend
-          const appointmentDate = new Date(appointment.startTime); 
+          const appointmentDate = new Date(appointment.startTime);
           if (appointmentDate.getFullYear() === currentYear) {
             const month = appointmentDate.getMonth(); // 0-11
             monthlyCounts[month]++;
@@ -40,7 +71,7 @@ export default function MonthlySalesChart() {
     };
 
     fetchMonthlyRegistrations();
-  }, []);
+  }, [auth.role, auth.email, auth.isAuthenticated, isLoadingAuth]); // Thêm dependencies
 
   const options: ApexOptions = {
     colors: ["#465fff"],

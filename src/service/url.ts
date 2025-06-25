@@ -34,12 +34,15 @@ const url = {
 
     EMPLOYEE: {
         PROFILE: "employees/profile",
+        UPDATE_PROFILE: "employees/update-profile",
+        UPDATE_PASSWORD: "employees/update-profile/password",
         GET_BY_STORE: "employees/store/{storeId}",
         CREATE: "employees/create",
         GET_PENDING_APPOINTMENTS: "employees/pending",
         UPDATE_APPOINTMENT_STATUS:
             "employees/appointments/{appointmentId}/status?action={action}",
         GET_ALL: "employees/all",
+        ADMIN_UPDATE: "employees/admin/update/{employeeId}",
     },
 
     WORKING_TIME_SLOT: {
@@ -86,6 +89,11 @@ const url = {
         GET_ALL: "user/customer/all",
         GET_BY_ID: "user/customer/{userId}",
     },
+     FEEDBACK: {
+        SUBMIT: "feedback/submit", 
+        GET_ALL: "feedback",       
+        REPLY: "feedback"          
+    }
 };
 
 export default url;

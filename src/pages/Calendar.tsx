@@ -8,6 +8,7 @@ import { useModal } from "../hooks/useModal";
 import PageMeta from "../components/common/PageMeta";
 import axios from "../service/api";
 import url from "../service/url";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth
 
 interface CalendarEvent extends EventInput {
   extendedProps: {
@@ -26,35 +27,40 @@ const Calendar: React.FC = () => {
   const [events, setEvents] = useState<CalendarEvent[]>([]);
   const { isOpen, openModal, closeModal } = useModal();
 
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const { auth, isLoadingAuth } = useAuth(); // Sử dụng useAuth hook
+  const userName = auth.userProfile?.fullName || ""; // Lấy fullName từ auth.userProfile
+
   const currentDate = new Date().toISOString().split("T")[0]; // June 14, 2025
 
   useEffect(() => {
-    const fetchWorkingTimeSlots = async () => {
-      try {
-        const response = await axios.get(url.WORKING_TIME_SLOT.GET_BY_EMPLOYEE);
-        const data = response.data || [];
+    // Chỉ fetch dữ liệu nếu authentication đã hoàn tất và userProfile có sẵn
+    if (!isLoadingAuth && auth.isAuthenticated) {
+      const fetchWorkingTimeSlots = async () => {
+        try {
+          const response = await axios.get(url.WORKING_TIME_SLOT.GET_BY_EMPLOYEE);
+          const data = response.data || [];
 
-        const mappedEvents: CalendarEvent[] = data.map((slot: any) => ({
-          id: slot.timeSlotId?.toString() || Date.now().toString(),
-          title: slot.description || "Ca làm",
-          start: slot.startTime,
-          end: slot.endTime,
-          allDay: false,
-          extendedProps: { 
-            calendar: slot.isAvailable ? "Success" : "Danger",
-            storeId: slot.store?.storeId
-          },
-        }));
+          const mappedEvents: CalendarEvent[] = data.map((slot: any) => ({
+            id: slot.timeSlotId?.toString() || Date.now().toString(),
+            title: slot.description || "Ca làm",
+            start: slot.startTime,
+            end: slot.endTime,
+            allDay: false,
+            extendedProps: {
+              calendar: slot.isAvailable ? "Success" : "Danger",
+              storeId: slot.store?.storeId
+            },
+          }));
 
-        setEvents(mappedEvents);
-      } catch (error) {
-        console.error("Error fetching working time slots:", error);
-      }
-    };
+          setEvents(mappedEvents);
+        } catch (error) {
+          console.error("Error fetching working time slots:", error);
+        }
+      };
 
-    fetchWorkingTimeSlots();
-  }, []);
+      fetchWorkingTimeSlots();
+    }
+  }, [isLoadingAuth, auth.isAuthenticated]); // Thêm dependencies để re-run khi auth state thay đổi
 
   const handleDateSelect = (selectInfo: DateSelectArg) => {
     const selectedDate = selectInfo.startStr.split("T")[0];
@@ -131,7 +137,7 @@ const Calendar: React.FC = () => {
         start: slot.startTime,
         end: slot.endTime,
         allDay: false,
-        extendedProps: { 
+        extendedProps: {
           calendar: slot.isAvailable ? "Success" : "Danger",
           storeId: slot.store?.storeId
         },
@@ -204,7 +210,7 @@ const Calendar: React.FC = () => {
                 <label className="block mb-1 font-medium">Tên nhân viên</label>
                 <input
                   type="text"
-                  value={user?.fullName || "Nguyễn Duy Hải"}
+                  value={userName} // Sử dụng userName từ useAuth
                   disabled
                   className="w-full border px-3 py-2 rounded bg-gray-100"
                 />

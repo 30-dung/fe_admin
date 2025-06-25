@@ -21,6 +21,7 @@ import { AuthProvider } from "@/context/AuthContext"; // IMPORT AuthProvider
 import AdminAppointments from "./pages/AllAppoiment/AdminAppointments";
 import Customer from "./pages/cm/Customer";
 import AdminProfiles from "pages/AdminProfiles";
+import AdminFeedbackPage from "./pages/Contact/AdminFeedbackPage";
 
 export default function App() {
     return (
@@ -95,6 +96,7 @@ export default function App() {
                                     path={routes.customer}
                                     element={<Customer />}
                                 />
+                                <Route path={routes.adminFeedback} element={<AdminFeedbackPage/>} />
                             </Route>
                         </Route>
                     </Routes>

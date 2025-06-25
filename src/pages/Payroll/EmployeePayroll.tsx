@@ -8,7 +8,7 @@ import { Search, X } from "lucide-react";
 import PageBreadcrumb from "@/components/common/PageBreadCrumb";
 import ComponentCard from "@/components/common/ComponentCard";
 import Input from "@/components/form/input/InputField";
-import Label from "@/components/form/Label";
+
 
 interface Pagination {
     currentPage: number;
