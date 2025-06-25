@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   Table,
   TableBody,
@@ -10,67 +11,111 @@ import Badge from "../../ui/badge/Badge";
 import { Modal } from "../../ui/modal";
 import axios from "../../../service/api";
 import url from "../../../service/url";
+import { useAuth } from "@/context/AuthContext";
+import { toast } from 'react-toastify'; // Import toast
 
 interface Appointment {
   appointmentId: number;
   storeName: string;
-  serviceName: string; // Đã chỉnh thành string theo cấu trúc của AppointmentResponse
+  serviceName: string;
   userName: string;
   employeeName: string;
   startTime: string;
   endTime: string;
   status: string;
   createdAt: string;
+  employeeId?: number;
 }
 
+type BadgeColor = "success" | "primary" | "error" | "warning" | "light" | "danger" | "info" | "dark";
+
 export default function BasicTableOne() {
+  const [searchParams] = useSearchParams();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<Appointment | null>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [statusFilter, setStatusFilter] = useState<string>("ALL"); // Đổi "All" thành "ALL"
+  const [statusFilter, setStatusFilter] = useState<string>("ALL");
   const [timeRangeFilter, setTimeRangeFilter] = useState<string>("ALL");
-  const [startDateFilter, setStartDateFilter] = useState<string>("");
-  const [endDateFilter, setEndDateFilter] = useState<string>("");
-
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
 
-  const getEmployeeEmail = async () => {
-    try {
-      const response = await axios.get(url.EMPLOYEE.PROFILE); //
-      return response.data.email;
-    } catch (err) {
-      throw new Error("Không thể lấy thông tin người dùng");
-    }
-  };
+  const { auth, isLoadingAuth } = useAuth();
 
-  const fetchAppointments = async () => {
+  // NEW STATES FOR CONFIRMATION MODALS
+  const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
+  const [isRejectConfirmModalOpen, setIsRejectConfirmModalOpen] = useState(false);
+  const [rejectReason, setRejectReason] = useState(""); // State để lưu lý do từ chối
+
+  const getEmployeeEmail = useCallback(async () => {
+    if (auth.email) {
+      return auth.email;
+    }
+    const response = await axios.get(url.EMPLOYEE.PROFILE);
+    return response.data.email;
+  }, [auth.email]);
+
+  const calculateDateRange = useCallback((range: string) => {
+    const now = new Date();
+    let start: Date;
+    let end: Date;
+
+    if (range === "DAY") {
+      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999);
+    } else if (range === "WEEK") {
+      start = new Date(now);
+      start.setDate(now.getDate() - (now.getDay() + 6) % 7);
+      start.setHours(0, 0, 0, 0);
+
+      end = new Date(start);
+      end.setDate(start.getDate() + 6);
+      end.setHours(23, 59, 59, 999);
+    } else if (range === "MONTH") {
+      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0);
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999);
+    } else {
+      return { startDate: "", endDate: "" };
+    }
+    return {
+      startDate: start.toLocaleString("sv-SE").replace(" ", "T"),
+      endDate: end.toLocaleString("sv-SE").replace(" ", "T")
+    };
+  }, []);
+
+  const fetchAppointments = useCallback(async (
+    currentStatusFilter: string,
+    currentTimeRangeFilter: string,
+    employeeEmail: string
+  ) => {
     try {
       setLoading(true);
       setError(null);
 
-      const employeeEmail = await getEmployeeEmail();
-
       const params: any = {};
-      if (statusFilter !== "ALL") params.status = statusFilter; //
-      if (startDateFilter) params.startDate = startDateFilter; //
-      if (endDateFilter) params.endDate = endDateFilter; //
+      // ONLY CHANGE START
+      if (currentStatusFilter !== "ALL") {
+        params.status = currentStatusFilter;
+      }
+      // ONLY CHANGE END
 
-      // Giữ nguyên endpoint /employee/{email} và truyền params
-      const response = await axios.get(url.APPOINTMENT.GET_BY_EMPLOYEE.replace("{email}", employeeEmail), { params }); //
-      console.log("API response from /employee/{email} with filters:", response.data);
+      if (currentTimeRangeFilter !== "ALL") {
+        const { startDate, endDate } = calculateDateRange(currentTimeRangeFilter);
+        params.startDate = startDate;
+        params.endDate = endDate;
+      }
 
-      // Backend /employee/{email} trả về một list các AppointmentResponse,
-      // mà mỗi AppointmentResponse đã gộp serviceName thành một string.
-      // Do đó, logic `appointmentMap` không cần thiết nữa.
+      const response = await axios.get(url.APPOINTMENT.GET_BY_EMPLOYEE.replace("{email}", employeeEmail), { params });
+      console.log("API response for Employee with filters:", response.data);
+
       const processedAppointments: Appointment[] = response.data.map((item: any) => ({
         appointmentId: item.appointmentId,
         storeName: item.storeService?.storeName || "Unknown Store",
-        serviceName: item.storeService?.serviceName || "Unknown Service", // serviceName là string
+        serviceName: item.storeService?.serviceName || "Unknown Service",
         employeeName: item.employee?.fullName || "Unknown Employee",
+        employeeId: item.employee?.employeeId,
         startTime: item.startTime,
         endTime: item.endTime,
         status: item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1).toLowerCase() : "Unknown",
@@ -84,29 +129,66 @@ export default function BasicTableOne() {
 
       setAppointments(sortedAppointments);
       setLoading(false);
-      setCurrentPage(1); // Reset về trang 1 khi lọc thay đổi
+      setCurrentPage(1);
     } catch (err: any) {
       console.error("Error fetching appointments:", err.response?.data || err);
       setError(err.response?.data?.message || "Không thể tải lịch sử đặt lịch");
       setLoading(false);
     }
-  };
+  }, [calculateDateRange]); // Removed getEmployeeEmail from dependencies as it's not directly used in the try block
 
   useEffect(() => {
-    fetchAppointments();
-  }, [statusFilter, timeRangeFilter, startDateFilter, endDateFilter]); //
+    const statusParam = searchParams.get("status");
+    const timeRangeParam = searchParams.get("timeRange");
+    const newStatusFilter = statusParam || "ALL";
+    const newTimeRangeFilter = timeRangeParam || "ALL";
 
+    setStatusFilter(newStatusFilter);
+    setTimeRangeFilter(newTimeRangeFilter);
+
+    if (isLoadingAuth) {
+        setLoading(true);
+        return;
+    }
+
+    if (auth.email) {
+      fetchAppointments(newStatusFilter, newTimeRangeFilter, auth.email);
+    } else {
+        console.warn("Auth email not available. User may not be logged in or AuthContext is still loading.");
+        if (!auth.isAuthenticated) {
+            setError("Bạn cần đăng nhập để xem lịch hẹn.");
+            setLoading(false);
+        } else {
+            setError("Không tìm thấy email nhân viên để tải lịch hẹn.");
+            setLoading(false);
+        }
+    }
+  }, [searchParams, fetchAppointments, auth.email, isLoadingAuth, auth.isAuthenticated]);
+
+  useEffect(() => {
+    if (!isLoadingAuth && auth.email) {
+      fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+    }
+  }, [statusFilter, timeRangeFilter, fetchAppointments, auth.email, isLoadingAuth]);
+
+  // Open detail modal
   const handleViewDetail = (appointment: Appointment) => {
     setSelectedAppointment(appointment);
     setIsModalOpen(true);
   };
 
+  // Close detail modal
   const closeModal = () => {
     setIsModalOpen(false);
     setSelectedAppointment(null);
+    // Reset all confirmation modals and states when main modal closes
+    setIsCancelConfirmModalOpen(false);
+    setIsRejectConfirmModalOpen(false);
+    setRejectReason("");
+    setIsProcessing(false);
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): BadgeColor => {
     switch (status) {
       case "Pending":
         return "warning";
@@ -116,6 +198,8 @@ export default function BasicTableOne() {
         return "success";
       case "Canceled":
         return "light";
+      case "Rejected":
+        return "danger";
       default:
         return "error";
     }
@@ -125,33 +209,76 @@ export default function BasicTableOne() {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      await axios.patch(url.APPOINTMENT.CONFIRM.replace("${id}", appointmentId.toString())); //
-      fetchAppointments(); // Gọi lại fetchAppointments để tải dữ liệu mới
+      await axios.patch(url.APPOINTMENT.CONFIRM.replace("${id}", appointmentId.toString()));
+      if (auth.email) {
+        fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+      }
+      toast.success("Xác nhận lịch hẹn thành công!"); // Toast notification
       setSelectedAppointment((prev) =>
         prev && prev.appointmentId === appointmentId ? { ...prev, status: "Confirmed" } : prev
       );
     } catch (error: any) {
       console.error("Lỗi khi xác nhận lịch hẹn:", error.response?.data || error.message);
-      alert(`Xác nhận thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+      toast.error(`Xác nhận thất bại: ${error.response?.data?.message || "Lỗi không xác định"}`); // Toast error
     } finally {
       setIsProcessing(false);
+      closeModal();
     }
   };
 
-  const handleCancel = async (appointmentId: number) => {
-    if (isProcessing) return;
+  // NEW: Open Reject Confirmation Modal
+  const openRejectConfirmModal = () => {
+    setIsModalOpen(false); // Close main detail modal
+    setIsRejectConfirmModalOpen(true);
+    setRejectReason(""); // Clear previous reason
+  };
+
+  // NEW: Handle Reject (from confirmation modal)
+  const handleReject = async () => {
+    if (isProcessing || !selectedAppointment) return;
     setIsProcessing(true);
     try {
-      await axios.patch(url.APPOINTMENT.CANCEL.replace("${id}", appointmentId.toString())); //
-      fetchAppointments(); // Gọi lại fetchAppointments để tải dữ liệu mới
+      await axios.patch(`${url.APPOINTMENT.REJECT.replace("${id}", selectedAppointment.appointmentId.toString())}?reason=${encodeURIComponent(rejectReason || "")}`);
+      if (auth.email) {
+        fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+      }
+      toast.success("Từ chối lịch hẹn thành công và khách hàng đã được thông báo."); // Toast notification
+      setSelectedAppointment(null);
+    } catch (error: any) {
+      console.error("Lỗi khi từ chối lịch hẹn:", error.response?.data || error.message);
+      toast.error(`Từ chối thất bại: ${error.response?.data?.message || "Lỗi không xác định"}`); // Toast error
+    } finally {
+      setIsProcessing(false);
+      closeModal(); // This will also close isRejectConfirmModalOpen
+    }
+  };
+
+  // NEW: Open Cancel Confirmation Modal
+  const openCancelConfirmModal = () => {
+    setIsModalOpen(false); // Close main detail modal
+    setIsCancelConfirmModalOpen(true);
+  };
+
+  // NEW: Handle Cancel (from confirmation modal)
+  const handleCancel = async () => {
+    if (isProcessing || !selectedAppointment) return;
+    setIsProcessing(true);
+    try {
+      await axios.patch(url.APPOINTMENT.CANCEL.replace("${id}", selectedAppointment.appointmentId.toString()));
+      
+      if (auth.email) {
+        fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+      }
+      toast.success("Hủy lịch hẹn thành công và khách hàng đã được thông báo."); // Toast notification
       setSelectedAppointment((prev) =>
-        prev && prev.appointmentId === appointmentId ? { ...prev, status: "Canceled" } : prev
+        prev && prev.appointmentId === selectedAppointment.appointmentId ? { ...prev, status: "Canceled" } : prev
       );
     } catch (error: any) {
       console.error("Lỗi khi hủy lịch hẹn:", error.response?.data || error.message);
-      alert(`Hủy thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+      toast.error(`Hủy thất bại: ${error.response?.data?.message || "Lỗi không xác định"}`); // Toast error
     } finally {
       setIsProcessing(false);
+      closeModal(); // This will also close isCancelConfirmModalOpen
     }
   };
 
@@ -159,70 +286,41 @@ export default function BasicTableOne() {
     if (isProcessing) return;
     setIsProcessing(true);
     try {
-      await axios.patch(url.APPOINTMENT.COMPLETE.replace("${id}", appointmentId.toString())); //
-      fetchAppointments(); // Gọi lại fetchAppointments để tải dữ liệu mới
+      await axios.patch(url.APPOINTMENT.COMPLETE.replace("${id}", appointmentId.toString()));
+      if (auth.email) {
+        fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+      }
+      toast.success("Hoàn thành lịch hẹn thành công!"); // Toast notification
       setSelectedAppointment((prev) =>
         prev && prev.appointmentId === appointmentId ? { ...prev, status: "Completed" } : prev
       );
     } catch (error: any) {
       console.error("Lỗi khi hoàn thành lịch hẹn:", error.response?.data || error.message);
-      alert(`Hoàn thành thất bại: ${error.response?.data || "Lỗi không xác định"}`);
+      toast.error(`Hoàn thành thất bại: ${error.response?.data || "Lỗi không xác định"}`); // Toast error
     } finally {
       setIsProcessing(false);
+      closeModal();
     }
   };
 
   const handleTimeRangeChange = (value: string) => {
     setTimeRangeFilter(value);
-    const now = new Date(); //
-
-    let start: Date; //
-    let end: Date; //
-
-    if (value === "DAY") { //
-      start = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0); //
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999); //
-
-      setStartDateFilter(start.toLocaleString("sv-SE").replace(" ", "T")); //
-      setEndDateFilter(end.toLocaleString("sv-SE").replace(" ", "T")); //
-    } else if (value === "WEEK") { //
-      start = new Date(now); //
-      start.setDate(now.getDate() - (now.getDay() + 6) % 7); // Bắt đầu từ thứ Hai
-      start.setHours(0, 0, 0, 0); //
-
-      end = new Date(start); //
-      end.setDate(start.getDate() + 6); // Kết thúc vào Chủ Nhật
-      end.setHours(23, 59, 59, 999); //
-
-      setStartDateFilter(start.toLocaleString("sv-SE").replace(" ", "T")); //
-      setEndDateFilter(end.toLocaleString("sv-SE").replace(" ", "T")); //
-    } else if (value === "MONTH") { //
-      start = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0); //
-      end = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59, 999); // Ngày 0 của tháng tiếp theo là ngày cuối cùng của tháng hiện tại
-
-      setStartDateFilter(start.toLocaleString("sv-SE").replace(" ", "T")); //
-      setEndDateFilter(end.toLocaleString("sv-SE").replace(" ", "T")); //
-    } else { //
-      setStartDateFilter(""); //
-      setEndDateFilter(""); //
-    }
   };
 
   const handleClearFilters = () => {
-    setStatusFilter("ALL"); //
-    setTimeRangeFilter("ALL"); //
-    setStartDateFilter(""); //
-    setEndDateFilter(""); //
+    setStatusFilter("ALL");
+    setTimeRangeFilter("ALL");
+    setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(appointments.length / itemsPerPage); //
-  const paginatedAppointments = appointments.slice( //
-    (currentPage - 1) * itemsPerPage, //
-    currentPage * itemsPerPage //
+  const totalPages = Math.ceil(appointments.length / itemsPerPage);
+  const paginatedAppointments = appointments.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
   );
 
-  const handlePageChange = (page: number) => { //
-    setCurrentPage(page); //
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
   };
 
   return (
@@ -239,7 +337,8 @@ export default function BasicTableOne() {
             <option value="PENDING">Chờ xác nhận</option>
             <option value="CONFIRMED">Đã xác nhận</option>
             <option value="COMPLETED">Hoàn thành</option>
-            <option value="CANCELED">Đã hủy</option>
+            <option value="CANCELED">Đã hủy</option> {/* Added CANCELED option */}
+            <option value="REJECTED">Đã từ chối</option>
           </select>
           <select
             value={timeRangeFilter}
@@ -338,6 +437,7 @@ export default function BasicTableOne() {
           </div>
         </div>
       )}
+      {/* Main Detail Modal */}
       <Modal isOpen={isModalOpen} onClose={closeModal} className="max-w-md p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
         {selectedAppointment && (
           <div>
@@ -369,11 +469,11 @@ export default function BasicTableOne() {
                   {isProcessing ? "Đang xử lý..." : "Xác nhận"}
                 </button>
                 <button
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 disabled:bg-gray-300 transition"
-                  onClick={() => handleCancel(selectedAppointment.appointmentId)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-red-300 transition"
+                  onClick={openRejectConfirmModal} // Mở modal xác nhận từ chối
                   disabled={isProcessing}
                 >
-                  {isProcessing ? "Đang xử lý..." : "Hủy"}
+                  {isProcessing ? "Đang xử lý..." : "Từ chối"}
                 </button>
               </div>
             )}
@@ -386,10 +486,88 @@ export default function BasicTableOne() {
                 >
                   {isProcessing ? "Đang xử lý..." : "Hoàn thành"}
                 </button>
+                <button
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 disabled:bg-red-300 transition"
+                  onClick={openCancelConfirmModal} // Mở modal xác nhận hủy
+                  disabled={isProcessing}
+                >
+                  {isProcessing ? "Đang xử lý..." : "Hủy"}
+                </button>
               </div>
             )}
           </div>
         )}
+      </Modal>
+
+      {/* Modal Xác nhận Hủy lịch */}
+      <Modal isOpen={isCancelConfirmModalOpen} onClose={closeModal} className="max-w-sm p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          {selectedAppointment && (
+              <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Xác nhận hủy lịch hẹn</h2>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                      Bạn có chắc chắn muốn hủy lịch hẹn dịch vụ <b>{selectedAppointment.serviceName}</b> của khách hàng <b>{selectedAppointment.userName}</b> vào lúc <b>{new Date(selectedAppointment.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</b> ngày <b>{new Date(selectedAppointment.startTime).toLocaleDateString("vi-VN")}</b> không?
+                  </p>
+                  <div className="flex justify-end gap-2 mt-4">
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                          onClick={closeModal} // Đóng modal hiện tại (modal xác nhận hủy)
+                      >
+                          Không
+                      </button>
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                          onClick={() => handleCancel()} // Gọi hàm handleCancel đã được sửa đổi
+                          disabled={isProcessing}
+                      >
+                          {isProcessing ? "Đang hủy..." : "Có, hủy lịch"}
+                      </button>
+                  </div>
+              </div>
+          )}
+      </Modal>
+
+      {/* Modal Xác nhận Từ chối lịch (với lý do) */}
+      <Modal isOpen={isRejectConfirmModalOpen} onClose={closeModal} className="max-w-sm p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          {selectedAppointment && (
+              <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Từ chối lịch hẹn</h2>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                      Bạn có chắc chắn muốn từ chối lịch hẹn dịch vụ <b>{selectedAppointment.serviceName}</b> của khách hàng <b>{selectedAppointment.userName}</b> vào lúc <b>{new Date(selectedAppointment.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</b> ngày <b>{new Date(selectedAppointment.startTime).toLocaleDateString("vi-VN")}</b> không?
+                  </p>
+                  <div className="mb-4">
+                      <label htmlFor="rejectReason" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                          Lý do từ chối (tùy chọn):
+                      </label>
+                      <textarea
+                          id="rejectReason"
+                          rows={3}
+                          value={rejectReason}
+                          onChange={(e) => setRejectReason(e.target.value)}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm dark:bg-gray-700 dark:border-gray-600 dark:text-gray-200"
+                          placeholder="Ví dụ: Bận việc đột xuất, lịch đầy..."
+                      ></textarea>
+                  </div>
+                  <div className="flex justify-end gap-2 mt-4">
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                          onClick={closeModal} // Đóng modal hiện tại (modal xác nhận từ chối)
+                      >
+                          Không
+                      </button>
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50"
+                          onClick={handleReject} // Gọi hàm handleReject đã được sửa đổi
+                          disabled={isProcessing}
+                      >
+                          {isProcessing ? "Đang từ chối..." : "Có, từ chối lịch"}
+                      </button>
+                  </div>
+              </div>
+          )}
       </Modal>
     </div>
   );

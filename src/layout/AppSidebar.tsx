@@ -13,11 +13,12 @@ import {
     UserCircleIcon,
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
-import { Group, GroupIcon } from "lucide-react";
+// import { Group, GroupIcon } from "lucide-react"; // Bỏ cái này nếu không dùng
 import routes from "@/config/routes";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth hook
 
 // Định nghĩa kiểu vai trò
-type UserRole = "ROLE_ADMIN" | "ROLE_EMPLOYEE";
+type UserRole = "ROLE_ADMIN" | "ROLE_EMPLOYEE" | "ROLE_CUSTOMER"; // Thêm ROLE_CUSTOMER nếu có thể login
 
 type NavItem = {
     name: string;
@@ -91,7 +92,7 @@ const navItems: NavItem[] = [
     {
         name: "Cuộc hẹn",
         icon: <TableIcon />,
-        path: "/basic-tables",
+        path: "/basic-tables", // Cần đổi path này sang trang Appointments cụ thể nếu có
         roles: ["ROLE_EMPLOYEE"],
     },
 
@@ -121,11 +122,10 @@ const navItems: NavItem[] = [
     },
 ];
 
-interface AppSidebarProps {
-    userRole?: UserRole;
-}
+// AppSidebarProps không cần userRole nữa vì sẽ lấy từ context
+interface AppSidebarProps {}
 
-const AppSidebar: React.FC<AppSidebarProps> = ({ userRole }) => {
+const AppSidebar: React.FC<AppSidebarProps> = () => {
     const {
         isExpanded,
         isMobileOpen,
@@ -136,16 +136,18 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ userRole }) => {
     } = useSidebar();
     const location = useLocation();
     const navigate = useNavigate();
+    const { auth, isLoadingAuth } = useAuth(); // Lấy auth và isLoadingAuth từ context
 
-    const effectiveRole =
-        userRole || (localStorage.getItem("role") as UserRole) || null;
+    // Sử dụng auth.role làm effectiveRole
+    const effectiveRole = auth.role as UserRole | null;
 
     useEffect(() => {
-        if (!effectiveRole) {
-            console.warn("No user role found. Redirecting to signin.");
+        // Chỉ điều hướng nếu AuthContext đã load xong và người dùng chưa được xác thực
+        if (!isLoadingAuth && !auth.isAuthenticated) {
+            console.warn("User not authenticated. Redirecting to signin.");
             navigate("/signin");
         }
-    }, [effectiveRole, navigate]);
+    }, [auth.isAuthenticated, isLoadingAuth, navigate]);
 
     const isActive = useCallback(
         (path: string) => {
@@ -192,6 +194,7 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ userRole }) => {
         : [];
 
     useEffect(() => {
+        // Log thông tin để debug, có thể bỏ trong production
         console.log(
             "Filtered Nav Items:",
             filteredNavItems.map((item) => ({
@@ -357,13 +360,14 @@ const AppSidebar: React.FC<AppSidebarProps> = ({ userRole }) => {
         </ul>
     );
 
-    if (!effectiveRole) {
-        return null;
+    // Hiển thị null hoặc loading nếu đang loading auth hoặc chưa xác thực
+    if (isLoadingAuth || !auth.isAuthenticated) {
+        return null; // Có thể thay bằng một loading spinner toàn màn hình nếu cần
     }
 
     return (
         <aside
-            className={`fixed mt-16 lg:mt-0 top-0 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
+            className={`fixed mt-16 lg:mt-0 top-0 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200
         ${
             isExpanded || isMobileOpen
                 ? "w-[290px]"

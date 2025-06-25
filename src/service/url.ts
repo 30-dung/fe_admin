@@ -59,6 +59,8 @@ const url = {
         CANCEL: "appointments/${id}/cancel",
         COMPLETE: "appointments/${id}/complete",
         FILTER: "appointments/filter",
+         REJECT: "appointments/${id}/reject", // Sửa từ "/api/appointments..." thành "appointments..."
+        REASSIGN: "appointments/${id}/reassign", // Sửa từ "/api/appointments..." thành "appointments..."
     },
     SERVICE: {
         GET_ALL: "services",

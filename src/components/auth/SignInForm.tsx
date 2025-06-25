@@ -8,6 +8,7 @@ import Button from "../ui/button/Button";
 import axios from "../../service/api";
 import { isAxiosError } from "axios";
 import url from "../../service/url";
+import { useAuth } from "@/context/AuthContext"; // Import useAuth hook
 
 interface FormData {
   email: string;
@@ -24,30 +25,17 @@ interface LoginResponse {
   role: string;
 }
 
-interface UserProfileResponse {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  membershipType: string;
-  loyaltyPoints: number;
-}
-
-interface EmployeeProfileResponse {
-  fullName: string;
-  email: string;
-  phoneNumber: string;
-  avatarUrl?: string;
-  specialization?: string;
-}
+// Bỏ các interface UserProfileResponse, EmployeeProfileResponse vì AuthContext sẽ fetch
 
 export default function SignInForm() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const returnTo = searchParams.get("returnTo") || "/";
+  const { auth, login, logout, isLoadingAuth } = useAuth(); // Sử dụng useAuth
 
   const [showPassword, setShowPassword] = useState(false);
   const [isChecked, setIsChecked] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<FormData>({
     email: "",
     password: "",
@@ -59,19 +47,22 @@ export default function SignInForm() {
   const [notification, setNotification] = useState<{ message: string; isSuccess: boolean } | null>(null);
 
   useEffect(() => {
-    const token = localStorage.getItem("access_token");
-    const role = localStorage.getItem("role");
-    if (token && role) {
-      if (role.includes("ROLE_ADMIN") || role.includes("ROLE_EMPLOYEE")) {
+    // Chờ cho AuthContext hoàn tất việc khôi phục trạng thái ban đầu
+    if (isLoadingAuth) {
+      return;
+    }
+
+    // Nếu đã xác thực và có role phù hợp, điều hướng
+    if (auth.isAuthenticated) {
+      if (auth.role && (auth.role.includes("ROLE_ADMIN") || auth.role.includes("ROLE_EMPLOYEE"))) {
         navigate(returnTo);
       } else {
-        localStorage.removeItem("access_token");
-        localStorage.removeItem("role");
+        // Nếu role không phù hợp (ví dụ: chỉ là khách hàng hoặc role không hợp lệ)
+        logout(); // Đăng xuất để xóa token, role, email khỏi localStorage và context
         navigate("/signin");
       }
     }
-    setLoading(false);
-  }, [navigate, returnTo]);
+  }, [auth, navigate, returnTo, logout, isLoadingAuth]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -107,49 +98,18 @@ export default function SignInForm() {
     return valid;
   };
 
-  const fetchUserProfile = async (token: string, role: string) => {
-  try {
-    const headers = { Authorization: `Bearer ${token}` };
-    let user;
-
-    if (role.includes("ROLE_ADMIN")) {
-      const response = await axios.get<UserProfileResponse>(url.USER.PROFILE, { headers });
-      user = {
-        fullName: response.data.fullName,
-        email: response.data.email,
-        avatarUrl: "/images/user/owner.jpg", // fallback
-      };
-    } else if (role.includes("ROLE_EMPLOYEE")) {
-      const response = await axios.get<EmployeeProfileResponse>(url.EMPLOYEE.PROFILE, { headers });
-      user = {
-        fullName: response.data.fullName,
-        email: response.data.email,
-        avatarUrl: response.data.avatarUrl || "/images/user/owner.jpg",
-      };
-    }
-
-    if (user) {
-      localStorage.setItem("user", JSON.stringify(user));
-    }
-  } catch (error) {
-    console.error("Failed to fetch profile:", error);
-    setNotification({ message: "Failed to load profile", isSuccess: false });
-  }
-};
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setNotification(null);
+    setLoading(true);
 
     if (validateForm()) {
       try {
         const response = await axios.post<LoginResponse>(url.AUTH.LOGIN, formData);
         const { token, role } = response.data;
-        localStorage.setItem("token", token);
-        localStorage.setItem("role", role);
 
         if (role.includes("ROLE_ADMIN") || role.includes("ROLE_EMPLOYEE")) {
-          await fetchUserProfile(token, role);
+          await login(token, formData.email, role); // Gọi hàm login từ AuthContext
           setNotification({ message: "Login successful", isSuccess: true });
           setTimeout(() => {
             navigate(returnTo);
@@ -159,8 +119,7 @@ export default function SignInForm() {
             message: "Access denied: Insufficient permissions",
             isSuccess: false,
           });
-          localStorage.removeItem("token");
-          localStorage.removeItem("role");
+          logout(); // Gọi logout từ AuthContext
         }
       } catch (error: unknown) {
         let errorMessage = "An error occurred during login";
@@ -168,9 +127,19 @@ export default function SignInForm() {
           errorMessage = error.response?.data?.message || error.message;
         }
         setNotification({ message: errorMessage, isSuccess: false });
+        logout(); // Đảm bảo logout nếu có lỗi
+      } finally {
+        setLoading(false);
       }
+    } else {
+      setLoading(false);
     }
   };
+
+  // Hiển thị loading overlay nếu AuthContext đang khôi phục trạng thái
+  if (isLoadingAuth) {
+    return <div>Loading authentication...</div>;
+  }
 
   return (
     <div className="flex flex-col flex-1">
