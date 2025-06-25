@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "service/api";
 import url from "service/url";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Enum cho giới tính
 enum Gender {
@@ -34,7 +36,20 @@ interface Employee {
     createdAt: string;
     updatedAt: string;
 }
-
+interface EmployeeUpdateDTO {
+    employeeCode?: string;
+    fullName?: string;
+    email?: string;
+    phoneNumber?: string;
+    gender?: Gender;
+    dateOfBirth?: string;
+    specialization?: string;
+    avatarUrl?: string;
+    baseSalary?: number;
+    commissionRate?: number;
+    salaryType?: SalaryType;
+    // Thêm các trường khác nếu cần
+}
 const genderLabel = {
     MALE: "Nam",
     FEMALE: "Nữ",
@@ -50,12 +65,34 @@ interface Store {
     storeId: number;
     storeName: string;
 }
-
+const Modal: React.FC<{
+    open: boolean;
+    onClose: () => void;
+    children: React.ReactNode;
+}> = ({ open, onClose, children }) => {
+    if (!open) return null;
+    return (
+        <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 dark:bg-black/60">
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 min-w-[400px] relative">
+                <button
+                    className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
+                    onClick={onClose}
+                >
+                    ×
+                </button>
+                {children}
+            </div>
+        </div>
+    );
+};
 const EmployeeList: React.FC = () => {
     const [stores, setStores] = useState<Store[]>([]);
     const [storeId, setStoreId] = useState<number>(1);
     const [employees, setEmployees] = useState<Employee[]>([]);
     const [loading, setLoading] = useState<boolean>(true);
+    const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
+    const [updateData, setUpdateData] = useState<EmployeeUpdateDTO>({});
+    const [updating, setUpdating] = useState(false);
 
     // Lấy danh sách cửa hàng
     useEffect(() => {
@@ -86,6 +123,83 @@ const EmployeeList: React.FC = () => {
     const storeName =
         stores.find((s) => s.storeId === storeId)?.storeName || `#${storeId}`;
 
+    const handleEdit = (emp: Employee) => {
+        setEditingEmp(emp);
+        setUpdateData({
+            employeeCode: emp.employeeCode,
+            fullName: emp.fullName,
+            email: emp.email,
+            phoneNumber: emp.phoneNumber,
+            gender: emp.gender,
+            dateOfBirth: emp.dateOfBirth,
+            specialization: emp.specialization,
+            avatarUrl: emp.avatarUrl,
+            baseSalary: emp.baseSalary,
+            commissionRate: emp.commissionRate,
+            salaryType: emp.salaryType,
+        });
+    };
+
+    const handleUpdate = async () => {
+        if (!editingEmp) return;
+        setUpdating(true);
+        try {
+            await axios.put(
+                url.EMPLOYEE.ADMIN_UPDATE.replace(
+                    "{employeeId}",
+                    String(editingEmp.employeeId)
+                ),
+                updateData
+            );
+            setEditingEmp(null);
+            setUpdateData({});
+            // Reload employees
+            const endpoint = url.EMPLOYEE.GET_BY_STORE.replace(
+                "{storeId}",
+                String(storeId)
+            );
+            const response = await axios.get<Employee[]>(endpoint);
+            setEmployees(response.data);
+            toast.success("Cập nhật nhân viên thành công!", {
+                position: "top-right",
+                autoClose: 2000,
+            });
+        } catch (err: any) {
+            // Hiển thị chi tiết lỗi nếu có
+            if (err.response?.data?.errors) {
+                const errorsObj = err.response.data.errors;
+                if (typeof errorsObj === "object") {
+                    Object.values(errorsObj).forEach((errArr) => {
+                        if (Array.isArray(errArr)) {
+                            errArr.forEach((msg) =>
+                                toast.error(msg, {
+                                    position: "top-right",
+                                    autoClose: 4000,
+                                })
+                            );
+                        } else if (typeof errArr === "string") {
+                            toast.error(errArr, {
+                                position: "top-right",
+                                autoClose: 4000,
+                            });
+                        }
+                    });
+                }
+            } else if (err.response?.data?.message) {
+                toast.error(err.response.data.message, {
+                    position: "top-right",
+                    autoClose: 4000,
+                });
+            } else {
+                toast.error("Cập nhật thất bại", {
+                    position: "top-right",
+                    autoClose: 4000,
+                });
+            }
+        } finally {
+            setUpdating(false);
+        }
+    };
     return (
         <div className="max-w-5xl mx-auto mt-8">
             <div className="flex items-center justify-between mb-6">
@@ -143,9 +257,9 @@ const EmployeeList: React.FC = () => {
                                     <th className="py-2 dark:text-gray-400">
                                         Loại lương
                                     </th>
-                                    {/* <th className="py-2 dark:text-gray-400">
-                                        Trạng thái
-                                    </th> */}
+                                    <th className="py-2 dark:text-gray-400">
+                                        Thao tác
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -190,17 +304,14 @@ const EmployeeList: React.FC = () => {
                                         <td className="py-2 dark:text-gray-400">
                                             {salaryTypeLabel[emp.salaryType]}
                                         </td>
-                                        {/* <td className="py-2">
-                                            {emp.isActive ? (
-                                                <span className="px-2 py-1 rounded bg-green-100 text-green-700 text-xs">
-                                                    Đang làm
-                                                </span>
-                                            ) : (
-                                                <span className="px-2 py-1 rounded bg-gray-200 text-gray-600 text-xs">
-                                                    Nghỉ
-                                                </span>
-                                            )}
-                                        </td> */}
+                                        <td className="py-2">
+                                            <button
+                                                className="px-2 py-1 bg-blue-600 text-white rounded"
+                                                onClick={() => handleEdit(emp)}
+                                            >
+                                                Sửa
+                                            </button>
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
@@ -211,7 +322,164 @@ const EmployeeList: React.FC = () => {
                         Không có nhân viên nào.
                     </p>
                 )}
+
+                {/* Modal sửa nhân viên */}
+                <Modal open={!!editingEmp} onClose={() => setEditingEmp(null)}>
+                    <h3 className="font-bold mb-4 text-lg">
+                        Cập nhật nhân viên
+                    </h3>
+                    <div className="grid grid-cols-2 gap-4">
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Mã nhân viên"
+                            value={updateData.employeeCode || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    employeeCode: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Họ tên"
+                            value={updateData.fullName || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    fullName: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Email"
+                            value={updateData.email || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    email: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Số điện thoại"
+                            value={updateData.phoneNumber || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    phoneNumber: e.target.value,
+                                }))
+                            }
+                        />
+                        <select
+                            className="border p-2 rounded"
+                            value={updateData.gender || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    gender: e.target.value as Gender,
+                                }))
+                            }
+                        >
+                            <option value="">Giới tính</option>
+                            <option value="MALE">Nam</option>
+                            <option value="FEMALE">Nữ</option>
+                            <option value="OTHER">Khác</option>
+                        </select>
+                        <input
+                            className="border p-2 rounded"
+                            type="date"
+                            value={updateData.dateOfBirth?.slice(0, 10) || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    dateOfBirth: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Chuyên môn"
+                            value={updateData.specialization || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    specialization: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            placeholder="Avatar URL"
+                            value={updateData.avatarUrl || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    avatarUrl: e.target.value,
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            type="number"
+                            placeholder="Lương cơ bản"
+                            value={updateData.baseSalary || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    baseSalary: Number(e.target.value),
+                                }))
+                            }
+                        />
+                        <input
+                            className="border p-2 rounded"
+                            type="number"
+                            placeholder="Tỉ lệ hoa hồng"
+                            value={updateData.commissionRate || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    commissionRate: Number(e.target.value),
+                                }))
+                            }
+                        />
+                        <select
+                            className="border p-2 rounded"
+                            value={updateData.salaryType || ""}
+                            onChange={(e) =>
+                                setUpdateData((d) => ({
+                                    ...d,
+                                    salaryType: e.target.value as SalaryType,
+                                }))
+                            }
+                        >
+                            <option value="">Loại lương</option>
+                            <option value="FIXED">Cố định</option>
+                            <option value="COMMISSION">Hoa hồng</option>
+                            <option value="MIXED">Kết hợp</option>
+                        </select>
+                    </div>
+                    <div className="mt-6 flex gap-2 justify-end">
+                        <button
+                            className="px-4 py-2 bg-blue-600 text-white rounded"
+                            onClick={handleUpdate}
+                            disabled={updating}
+                        >
+                            {updating ? "Đang cập nhật..." : "Lưu"}
+                        </button>
+                        <button
+                            className="px-4 py-2 bg-gray-400 text-white rounded"
+                            onClick={() => setEditingEmp(null)}
+                            disabled={updating}
+                        >
+                            Hủy
+                        </button>
+                    </div>
+                </Modal>
             </div>
+            <ToastContainer />
         </div>
     );
 };

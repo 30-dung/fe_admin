@@ -15,6 +15,8 @@ import PageBreadcrumb from "components/common/PageBreadCrumb";
 import ComponentCard from "components/common/ComponentCard";
 import Label from "components/form/Label";
 import Input from "components/form/input/InputField";
+import { ToastContainer, toast } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 
 // Types based on backend
 interface EmployeeRequestDTO {
@@ -145,7 +147,10 @@ const CreateEmployeeForm = () => {
             });
 
             if (response.status === 200 || response.status === 201) {
-                alert("Tạo nhân viên thành công!");
+                toast.success("Tạo nhân viên thành công!", {
+                    position: "top-right",
+                    autoClose: 3000,
+                });
 
                 // Reset form
                 setFormData({
@@ -162,19 +167,45 @@ const CreateEmployeeForm = () => {
                     avatarUrl: "",
                 });
             } else {
-                alert(
+                toast.error(
                     `Lỗi: ${
                         response.data?.message || "Không thể tạo nhân viên"
-                    }`
+                    }`,
+                    { position: "top-right", autoClose: 4000 }
                 );
             }
         } catch (error: any) {
-            console.error("Error creating employee:", error);
-            alert(
-                `Đã xảy ra lỗi khi tạo nhân viên: ${
-                    error.response?.data?.message || error.message
-                }`
-            );
+            // Hiển thị chi tiết lỗi từ backend nếu có
+            if (error.response?.data?.errors) {
+                const errorsObj = error.response.data.errors;
+                if (typeof errorsObj === "object") {
+                    Object.values(errorsObj).forEach((errArr) => {
+                        if (Array.isArray(errArr)) {
+                            errArr.forEach((msg) =>
+                                toast.error(msg, {
+                                    position: "top-right",
+                                    autoClose: 4000,
+                                })
+                            );
+                        } else if (typeof errArr === "string") {
+                            toast.error(errArr, {
+                                position: "top-right",
+                                autoClose: 4000,
+                            });
+                        }
+                    });
+                }
+            } else if (error.response?.data?.message) {
+                toast.error(error.response.data.message, {
+                    position: "top-right",
+                    autoClose: 4000,
+                });
+            } else {
+                toast.error(error.message, {
+                    position: "top-right",
+                    autoClose: 4000,
+                });
+            }
         } finally {
             setIsSubmitting(false);
         }
@@ -521,7 +552,6 @@ const CreateEmployeeForm = () => {
                     </div>
 
                     {/* Salary Information Notice */}
-                    
 
                     {/* Submit Button */}
                     <div className="flex justify-end space-x-3">
@@ -543,6 +573,7 @@ const CreateEmployeeForm = () => {
                 </div>
                 {/* </div> */}
             </ComponentCard>
+            <ToastContainer />
         </div>
     );
 };

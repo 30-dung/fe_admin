@@ -42,6 +42,7 @@ const url = {
         UPDATE_APPOINTMENT_STATUS:
             "employees/appointments/{appointmentId}/status?action={action}",
         GET_ALL: "employees/all",
+        ADMIN_UPDATE: "employees/admin/update/{employeeId}",
     },
 
     WORKING_TIME_SLOT: {
