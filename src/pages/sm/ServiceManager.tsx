@@ -1,3 +1,4 @@
+// ServiceManager.tsx
 import {
     EyeIcon,
     PencilSquareIcon,
@@ -23,7 +24,7 @@ export default function ServiceManager() {
     interface Store {
         storeId: number;
         storeName: string;
-        storeImage?: string;
+        storeImages?: string; // Đã đổi tên từ storeImage thành storeImages để khớp với backend và Store.tsx
     }
 
     interface StoreService {
@@ -41,7 +42,7 @@ export default function ServiceManager() {
         serviceName: string;
         description: string;
         durationMinutes: string;
-        serviceImg: string;
+        serviceImg: string; // Vẫn là string (URL tương đối)
     }
 
     interface AddPriceFormState {
@@ -78,11 +79,15 @@ export default function ServiceManager() {
         price: number;
     }>({ storeServiceId: null, price: 0 });
 
-
     const [confirmDelete, setConfirmDelete] = useState<{
         open: boolean;
         id: number | null;
     }>({ open: false, id: null });
+
+    // NEW STATE for image file
+    const [selectedServiceImage, setSelectedServiceImage] = useState<File | null>(null);
+    const [serviceImagePreview, setServiceImagePreview] = useState<string | null>(null);
+
 
     // --- Fetching Data --- (Giữ nguyên)
     const fetchServicesAndPrices = async () => {
@@ -112,7 +117,7 @@ export default function ServiceManager() {
     const fetchStores = async () => {
         try {
             const res = await axios.get<Store[]>(url.STORE.ALL);
-            setStores(res.data);
+            setStores(Array.isArray(res.data) ? res.data : []); // Đảm bảo res.data là mảng
         } catch (error: any) {
             toast.error(`Không thể tải danh sách cửa hàng: ${error.message}`);
         }
@@ -131,6 +136,8 @@ export default function ServiceManager() {
             durationMinutes: "",
             serviceImg: "",
         });
+        setSelectedServiceImage(null); // Reset selected file
+        setServiceImagePreview(null); // Reset preview
         setModal({ type: "addService", data: null });
     };
 
@@ -139,8 +146,11 @@ export default function ServiceManager() {
             serviceName: service.serviceName,
             description: service.description,
             durationMinutes: String(service.durationMinutes),
-            serviceImg: service.serviceImg || "",
+            serviceImg: service.serviceImg || "", // Giữ đường dẫn tương đối (ví dụ: "/images/abc.png")
         });
+        setSelectedServiceImage(null); // Đảm bảo không có file mới nào được chọn ban đầu
+        // Đặt serviceImagePreview là URL đầy đủ của ảnh hiện tại nếu có
+        setServiceImagePreview(service.serviceImg ? `${url.BASE_IMAGES}${service.serviceImg}` : null);
         setModal({ type: "editService", data: service });
     };
 
@@ -178,6 +188,9 @@ export default function ServiceManager() {
 
     const closeModal = () => {
         setModal({ type: null, data: null });
+        // Reset image states when closing any modal
+        setSelectedServiceImage(null);
+        setServiceImagePreview(null);
     };
 
     // --- Form Change Handlers --- (Giữ nguyên)
@@ -185,6 +198,18 @@ export default function ServiceManager() {
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
     ) => {
         setCreateServiceForm({ ...createServiceForm, [e.target.name]: e.target.value });
+    };
+
+    // NEW handler for image file input
+    const handleServiceImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedServiceImage(file);
+            setServiceImagePreview(URL.createObjectURL(file)); // Create a preview URL
+        } else {
+            setSelectedServiceImage(null);
+            setServiceImagePreview(null);
+        }
     };
 
     const handleAddPriceFormChange = (
@@ -207,15 +232,43 @@ export default function ServiceManager() {
         }));
     };
 
-    // --- CRUD Operations --- (Giữ nguyên)
+    // --- NEW Image Upload Function ---
+    const uploadImage = async (imageFile: File): Promise<string | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            const response = await axios.post<string>(url.UPLOAD.IMAGE, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data; // This will be the URL (relative path) returned by the backend
+        } catch (error: any) {
+            toast.error(`Không thể tải ảnh lên: ${error.message}`);
+            return null;
+        }
+    };
+
+    // --- CRUD Operations --- (Updated for image upload)
     const handleAddService = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            let imageUrl: string | null = createServiceForm.serviceImg;
+
+            if (selectedServiceImage) {
+                // Upload new image if selected
+                imageUrl = await uploadImage(selectedServiceImage);
+                if (!imageUrl) {
+                    // Stop if image upload fails
+                    return;
+                }
+            }
+
             const serviceData = {
                 serviceName: createServiceForm.serviceName,
                 description: createServiceForm.description,
                 durationMinutes: Number(createServiceForm.durationMinutes),
-                serviceImg: createServiceForm.serviceImg,
+                serviceImg: imageUrl || "", // Use uploaded URL or existing if no new file
             };
             const res = await axios.post<Service>(url.SERVICE.CREATE, serviceData);
             toast.success("Tạo dịch vụ thành công!");
@@ -238,11 +291,28 @@ export default function ServiceManager() {
                 return;
             }
 
+            let finalImageUrl: string | null = createServiceForm.serviceImg; // Bắt đầu với đường dẫn ảnh hiện tại từ form state (đường dẫn tương đối)
+
+            if (selectedServiceImage) {
+                // Nếu người dùng CHỌN ẢNH MỚI, thì upload ảnh mới
+                const uploadedUrl = await uploadImage(selectedServiceImage);
+                if (!uploadedUrl) {
+                    // Dừng lại nếu upload ảnh thất bại
+                    return;
+                }
+                finalImageUrl = uploadedUrl; // Cập nhật finalImageUrl bằng đường dẫn mới (tương đối)
+            } else if (createServiceForm.serviceImg === "") {
+                // Nếu người dùng ĐÃ XÓA ảnh cũ (bằng nút "Xóa ảnh hiện tại") VÀ KHÔNG CHỌN ảnh mới
+                finalImageUrl = ""; // Gửi chuỗi rỗng cho backend
+            }
+            // Trường hợp còn lại: người dùng không chọn ảnh mới và cũng không xóa ảnh cũ (createServiceForm.serviceImg
+            // vẫn là đường dẫn tương đối ban đầu), thì finalImageUrl giữ nguyên giá trị đó.
+
             const serviceData = {
                 serviceName: createServiceForm.serviceName,
                 description: createServiceForm.description,
                 durationMinutes: Number(createServiceForm.durationMinutes),
-                serviceImg: createServiceForm.serviceImg,
+                serviceImg: finalImageUrl, // Gửi đường dẫn tương đối (mới hoặc cũ, hoặc rỗng)
             };
             await axios.put(
                 url.SERVICE.UPDATE.replace(
@@ -344,6 +414,10 @@ export default function ServiceManager() {
     const handleConfirmDeleteService = async () => {
         if (confirmDelete.id === null) return;
         try {
+            // Lấy thông tin dịch vụ để xóa ảnh liên quan
+            const serviceToDeleteRes = await axios.get<Service>(url.SERVICE.GET_BY_ID.replace("${id}", String(confirmDelete.id)));
+            const serviceToDelete = serviceToDeleteRes.data;
+
             const relatedStoreServices = allStoreServices.filter(ss => ss.service.serviceId === confirmDelete.id);
             for (const ss of relatedStoreServices) {
                 await axios.delete(url.STORE_SERVICE.DELETE.replace("${id}", String(ss.storeServiceId)));
@@ -353,6 +427,13 @@ export default function ServiceManager() {
                 url.SERVICE.DELETE.replace("${id}", String(confirmDelete.id))
             );
             toast.success("Xóa dịch vụ và tất cả giá liên quan thành công!");
+            
+            // Xóa ảnh vật lý sau khi Service được xóa thành công
+            if (serviceToDelete.serviceImg) {
+                // Backend service sẽ lo việc xóa file, frontend không gọi API xóa file trực tiếp.
+                // Hàm delete() của ServiceService đã được cập nhật để xóa file.
+            }
+
             fetchServicesAndPrices();
             setConfirmDelete({ open: false, id: null });
         } catch (error: any) {
@@ -402,8 +483,9 @@ export default function ServiceManager() {
                                     <td className="py-2 px-4">
                                         {s.serviceImg && (
                                             <img
-                                                src={s.serviceImg}
-                                                alt=""
+                                                // Assuming backend serves images from /images/
+                                                src={s.serviceImg.startsWith('http') ? s.serviceImg : `${url.BASE_IMAGES}${s.serviceImg}`} // Sửa để xử lý cả URL tuyệt đối và tương đối
+                                                alt={s.serviceName}
                                                 className="w-16 h-10 object-cover rounded"
                                             />
                                         )}
@@ -460,7 +542,7 @@ export default function ServiceManager() {
                     </table>
                 </div>
 
-                {/* Modal Thêm Dịch vụ mới (Giữ nguyên) */}
+                {/* Modal Thêm Dịch vụ mới */}
                 {modal.type === "addService" && (
                     <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 dark:bg-black/60">
                         <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
@@ -515,17 +597,23 @@ export default function ServiceManager() {
                                         min={1}
                                     />
                                 </div>
+                                {/* NEW: File Input for serviceImg */}
                                 <div>
                                     <label className="block mb-1 text-gray-700 dark:text-gray-200">
-                                        Ảnh dịch vụ (URL)
+                                        Ảnh dịch vụ
                                     </label>
                                     <input
-                                        type="text"
-                                        name="serviceImg"
+                                        type="file"
+                                        name="serviceImgFile" // Use a different name for file input to avoid conflict
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                                        value={createServiceForm.serviceImg}
-                                        onChange={handleCreateServiceFormChange}
+                                        onChange={handleServiceImageChange}
+                                        accept="image/*" // Only accept image files
                                     />
+                                    {serviceImagePreview && (
+                                        <div className="mt-2">
+                                            <img src={serviceImagePreview} alt="Xem trước ảnh" className="w-24 h-24 object-cover rounded" />
+                                        </div>
+                                    )}
                                 </div>
                                 <div className="flex gap-2">
                                     <button
@@ -547,7 +635,7 @@ export default function ServiceManager() {
                     </div>
                 )}
 
-                {/* Modal Sửa Dịch vụ (Giữ nguyên) */}
+                {/* Modal Sửa Dịch vụ */}
                 {modal.type === "editService" && (
                     <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 dark:bg-black/60">
                         <div className="relative w-full max-w-md max-h-[90vh] overflow-y-auto bg-white dark:bg-gray-900 rounded-xl shadow-2xl border border-gray-200 dark:border-gray-700 p-6">
@@ -602,17 +690,40 @@ export default function ServiceManager() {
                                         min={1}
                                     />
                                 </div>
+                                {/* NEW: File Input for serviceImg in edit modal */}
                                 <div>
                                     <label className="block mb-1 text-gray-700 dark:text-gray-200">
-                                        Ảnh dịch vụ (URL)
+                                        Ảnh dịch vụ
                                     </label>
                                     <input
-                                        type="text"
-                                        name="serviceImg"
+                                        type="file"
+                                        name="serviceImgFile"
                                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                                        value={createServiceForm.serviceImg}
-                                        onChange={handleCreateServiceFormChange}
+                                        onChange={handleServiceImageChange}
+                                        accept="image/*"
                                     />
+                                    {(serviceImagePreview) && (
+                                        <div className="mt-2">
+                                            <img
+                                                src={serviceImagePreview} // Luôn dùng serviceImagePreview
+                                                alt="Ảnh dịch vụ hiện tại/mới"
+                                                className="w-24 h-24 object-cover rounded"
+                                            />
+                                        </div>
+                                    )}
+                                    {/* Optionally allow clearing the existing image by setting serviceImg to empty string */}
+                                    {createServiceForm.serviceImg && !selectedServiceImage && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setCreateServiceForm(prev => ({ ...prev, serviceImg: "" }));
+                                                setServiceImagePreview(null);
+                                            }}
+                                            className="text-red-500 text-sm mt-1 hover:underline"
+                                        >
+                                            Xóa ảnh hiện tại
+                                        </button>
+                                    )}
                                 </div>
                                 <div className="flex gap-2">
                                     <button
@@ -662,7 +773,7 @@ export default function ServiceManager() {
                                         required
                                         disabled={modal.data !== null}
                                     >
-                                        <option value="">-- Chọn dịch vụ --</option>
+                                        <option value="">Chọn dịch vụ</option>
                                         {services.map((service) => (
                                             <option key={service.serviceId} value={service.serviceId}>
                                                 {service.serviceName}
@@ -681,7 +792,7 @@ export default function ServiceManager() {
                                         onChange={handleAddPriceFormChange}
                                         required
                                     >
-                                        <option value="">-- Chọn cửa hàng --</option>
+                                        <option value="">Chọn cửa hàng</option>
                                         {stores.map((store) => (
                                             <option key={store.storeId} value={store.storeId}>
                                                 {store.storeName}
@@ -748,7 +859,7 @@ export default function ServiceManager() {
                                 <div className="flex-shrink-0 mb-4 flex justify-center items-center h-48 w-full bg-gray-100 dark:bg-gray-800 rounded-lg">
                                     {modal.data.serviceImg ? (
                                         <img
-                                            src={modal.data.serviceImg}
+                                            src={modal.data.serviceImg.startsWith('http') ? modal.data.serviceImg : `${url.BASE_IMAGES}${modal.data.serviceImg}`} // Sửa để xử lý cả URL tuyệt đối và tương đối
                                             alt={modal.data.serviceName}
                                             className="max-w-full max-h-full object-contain rounded-lg"
                                         />
@@ -787,16 +898,16 @@ export default function ServiceManager() {
                                 <span className="font-semibold text-gray-800 dark:text-gray-100 block mb-3">
                                     Giá tại các cửa hàng:
                                 </span>
-                               
+
                                 <div className="flex-grow relative custom-scrollbar scroll-fade-container-detail pb-4">
                                     {modal.data.storeServices && modal.data.storeServices.length > 0 ? (
                                         <ul className="space-y-4">
                                             {modal.data.storeServices.map((ss: StoreService) => (
                                                 <li key={ss.storeServiceId} className="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800">
                                                     <div className="flex items-center gap-3">
-                                                        {ss.store.storeImage && (
+                                                        {ss.store.storeImages && ( // SỬA: Dùng storeImages
                                                             <img
-                                                                src={ss.store.storeImage}
+                                                                src={ss.store.storeImages.startsWith('http') ? ss.store.storeImages : `${url.BASE_IMAGES}${ss.store.storeImages}`} // Sửa để xử lý cả URL tuyệt đối và tương đối
                                                                 alt={ss.store.storeName}
                                                                 className="w-12 h-12 object-cover rounded-full shadow"
                                                             />
@@ -837,7 +948,7 @@ export default function ServiceManager() {
                 </div>
             )}
 
-            
+
 
                 {/* Modal Sửa giá của StoreService (Giữ nguyên) */}
                 {modal.type === "editStoreServicePrice" && modal.data && (

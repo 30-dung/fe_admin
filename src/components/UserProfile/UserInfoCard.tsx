@@ -6,19 +6,20 @@ import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import axios from "../../service/api";
 import url from "../../service/url";
+import { toast, ToastContainer } from "react-toastify"; // Import ToastContainer và toast
 
 interface Employee {
   fullName?: string;
-  avatarUrl?: string;
+  avatarUrl?: string; // Sẽ là đường dẫn tương đối từ backend
   dateOfBirth?: string;
   email?: string;
   employeeCode?: string;
   gender?: string;
   phoneNumber?: string;
   specialization?: string;
-  storeId?: string;
+  storeId?: string; // Giả định là string
   store?: {
-    id: string;
+    id: string; // Giả định là string
     storeName?: string;
   };
 }
@@ -33,6 +34,10 @@ export default function UserInfoCard() {
     newPassword: "",
     confirmPassword: "",
   });
+
+  // NEW STATES for avatar image handling
+  const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null); // Để hiển thị ảnh preview hoặc ảnh cũ
 
   // Format date to "DD/MM/YYYY" for display
   const formatDate = (dateStr: string | undefined): string => {
@@ -83,10 +88,18 @@ export default function UserInfoCard() {
       .then((res) => {
         setEmployee(res.data);
         setFormData(res.data);
+        // Khi tải dữ liệu về, set avatarPreview cho ảnh hiện tại
+        if (res.data.avatarUrl) {
+          // Xử lý cả URL tuyệt đối (http/https) và tương đối (/)
+          setAvatarPreview(res.data.avatarUrl.startsWith('http') ? res.data.avatarUrl : `http://localhost:9090${res.data.avatarUrl}`);
+        } else {
+          setAvatarPreview("/images/user/owner.jpg"); // Ảnh mặc định nếu không có avatar
+        }
         console.log("Employee data:", res.data);
       })
       .catch((error) => {
         console.error("Error fetching employee data:", error);
+        // Đảm bảo avatarUrl mặc định được xử lý đúng
         setEmployee({
           fullName: "",
           avatarUrl: "/images/user/owner.jpg",
@@ -106,6 +119,7 @@ export default function UserInfoCard() {
           phoneNumber: "",
           dateOfBirth: "",
         });
+        setAvatarPreview("/images/user/owner.jpg"); // Set ảnh mặc định khi lỗi
       });
   }, []);
 
@@ -121,20 +135,67 @@ export default function UserInfoCard() {
     setPasswordData((prev) => ({ ...prev, [name]: value }));
   };
 
+  // NEW handler for avatar file input
+  const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      setSelectedAvatarFile(file);
+      setAvatarPreview(URL.createObjectURL(file)); // Create a preview URL for the newly selected file
+    } else {
+      setSelectedAvatarFile(null);
+      // KHI KHÔNG CHỌN FILE MỚI, QUAY LẠI ẢNH HIỆN TẠI CỦA FORM DATA (nếu có) HOẶC ẢNH MẶC ĐỊNH
+      setAvatarPreview(formData.avatarUrl ? (formData.avatarUrl.startsWith('http') ? formData.avatarUrl : `http://localhost:9090${formData.avatarUrl}`) : "/images/user/owner.jpg");
+    }
+  };
+
+  // NEW Image Upload Function
+  const uploadImage = async (imageFile: File): Promise<string | null> => {
+      try {
+          const formData = new FormData();
+          formData.append('file', imageFile);
+          const response = await axios.post<string>(url.UPLOAD.IMAGE, formData, {
+              headers: {
+                  'Content-Type': 'multipart/form-data',
+              },
+          });
+          return response.data; // This will be the URL (relative path) returned by the backend
+      } catch (error: any) {
+          toast.error(`Không thể tải ảnh lên: ${error.message}`);
+          return null;
+      }
+  };
+
   // Handle profile update
   const handleSaveProfile = async () => {
     try {
       if (!formData.fullName || !formData.email) {
-        alert("Họ tên và Email là bắt buộc.");
+        toast.error("Họ tên và Email là bắt buộc."); // Sử dụng toast
         return;
       }
       if (formData.dateOfBirth) {
         const date = new Date(formData.dateOfBirth);
         if (isNaN(date.getTime())) {
-          alert("Ngày sinh không hợp lệ.");
+          toast.error("Ngày sinh không hợp lệ."); // Sử dụng toast
           return;
         }
       }
+
+      let finalAvatarUrl: string | undefined = formData.avatarUrl; // Bắt đầu với URL hiện tại từ formData (đường dẫn tương đối)
+
+      if (selectedAvatarFile) {
+          // Nếu người dùng CHỌN ẢNH MỚI, upload ảnh mới
+          const uploadedUrl = await uploadImage(selectedAvatarFile);
+          if (!uploadedUrl) {
+              return; // Dừng lại nếu upload ảnh thất bại
+          }
+          finalAvatarUrl = uploadedUrl; // Cập nhật finalAvatarUrl bằng đường dẫn mới (tương đối)
+      } else if (formData.avatarUrl === "") {
+          // Nếu người dùng ĐÃ XÓA ảnh cũ (bằng nút "Xóa ảnh hiện tại") VÀ KHÔNG CHỌN ảnh mới
+          finalAvatarUrl = ""; // Gửi chuỗi rỗng cho backend
+      }
+      // Trường hợp còn lại: người dùng không chọn ảnh mới và cũng không xóa ảnh cũ (formData.avatarUrl
+      // vẫn là đường dẫn tương đối ban đầu), thì finalAvatarUrl giữ nguyên giá trị đó.
+
 
       const formattedData = {
         fullName: formData.fullName,
@@ -142,7 +203,7 @@ export default function UserInfoCard() {
         employeeCode: formData.employeeCode || "",
         gender: formData.gender || "",
         phoneNumber: formData.phoneNumber || "",
-        avatarUrl: formData.avatarUrl || "",
+        avatarUrl: finalAvatarUrl, // Gửi URL cuối cùng (tương đối)
         specialization: formData.specialization || "",
         dateOfBirth: formData.dateOfBirth || "",
       };
@@ -156,15 +217,22 @@ export default function UserInfoCard() {
         },
       });
 
-      setEmployee(formattedData);
-      alert("Cập nhật hồ sơ thành công!");
+      setEmployee(response.data); // Cập nhật employee state với dữ liệu trả về từ backend (chứa URL mới nếu có)
+      // Cập nhật lại avatarPreview để hiển thị ảnh mới sau khi save thành công
+      if (response.data.avatarUrl) {
+          setAvatarPreview(response.data.avatarUrl.startsWith('http') ? response.data.avatarUrl : `http://localhost:9090${response.data.avatarUrl}`);
+      } else {
+          setAvatarPreview("/images/user/owner.jpg");
+      }
+      setSelectedAvatarFile(null); // Reset selected file sau khi save
+      toast.success("Cập nhật hồ sơ thành công!"); // Sử dụng toast
       closeModal();
     } catch (error: any) {
       console.error("Lỗi cập nhật hồ sơ:", error.response?.data || error.message);
-      alert(
+      const errorMessage =
         error.response?.data?.message ||
-          "Cập nhật hồ sơ thất bại. Vui lòng thử lại."
-      );
+        "Cập nhật hồ sơ thất bại. Vui lòng thử lại.";
+      toast.error(errorMessage); // Sử dụng toast
     }
   };
 
@@ -172,15 +240,15 @@ export default function UserInfoCard() {
   const handleSavePassword = async (e: FormEvent) => {
     e.preventDefault();
     if (!passwordData.currentPassword) {
-      alert("Vui lòng nhập mật khẩu hiện tại.");
+      toast.error("Vui lòng nhập mật khẩu hiện tại."); // Sử dụng toast
       return;
     }
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      alert("Mật khẩu mới và xác nhận mật khẩu không khớp.");
+      toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp."); // Sử dụng toast
       return;
     }
     if (!/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/.test(passwordData.newPassword)) {
-      alert("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt.");
+      toast.error("Mật khẩu mới phải có ít nhất 8 ký tự, bao gồm chữ hoa, chữ thường, số và ký tự đặc biệt."); // Sử dụng toast
       return;
     }
 
@@ -200,7 +268,7 @@ export default function UserInfoCard() {
         }
       );
       console.log("Password update response:", response.data);
-      alert("Đổi mật khẩu thành công!");
+      toast.success("Đổi mật khẩu thành công!"); // Sử dụng toast
       setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" });
       setIsPasswordModalOpen(false);
     } catch (error: any) {
@@ -209,9 +277,17 @@ export default function UserInfoCard() {
         error.response?.data?.message ||
         "Đổi mật khẩu thất bại. Vui lòng kiểm tra mật khẩu hiện tại hoặc thử lại.";
       console.error("Error updating password:", error.response?.data || error.message);
-      alert(errorMessage);
-      window.history.replaceState({}, document.title, window.location.pathname);
+      toast.error(errorMessage); // Sử dụng toast
+      // window.history.replaceState({}, document.title, window.location.pathname); // Dòng này có thể gây lỗi hoặc hành vi không mong muốn, nên cân nhắc bỏ
     }
+  };
+
+  // Khi mở modal chỉnh sửa, reset trạng thái file và preview
+  const handleOpenEditModal = () => {
+    setSelectedAvatarFile(null); // Clear selected file
+    // Set preview to current avatar or default, using the full URL
+    setAvatarPreview(formData.avatarUrl ? (formData.avatarUrl.startsWith('http') ? formData.avatarUrl : `http://localhost:9090${formData.avatarUrl}`) : "/images/user/owner.jpg");
+    openModal();
   };
 
   return (
@@ -223,7 +299,11 @@ export default function UserInfoCard() {
           </h4>
           <div className="flex flex-col items-center w-full gap-6 lg:flex-row lg:items-start">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
-              <img src={employee?.avatarUrl || "/images/user/owner.jpg"} alt="user" />
+              <img
+                src={employee?.avatarUrl ? (employee.avatarUrl.startsWith('http') ? employee.avatarUrl : `http://localhost:9090${employee.avatarUrl}`) : "/images/user/owner.jpg"}
+                alt="user"
+                className="w-full h-full object-cover" // Thêm object-cover để ảnh hiển thị đúng
+              />
             </div>
             <div>
               <h4 className="mb-2 text-lg font-semibold text-center text-gray-800 dark:text-white/90 lg:text-left" style={{ marginTop: 25 }}>
@@ -293,7 +373,7 @@ export default function UserInfoCard() {
 
         <div className="flex flex-row gap-3 lg:flex-row lg:items-end">
           <button
-            onClick={openModal}
+            onClick={handleOpenEditModal} // Sử dụng hàm mới để mở modal chỉnh sửa
             className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
           >
             <svg
@@ -307,7 +387,7 @@ export default function UserInfoCard() {
               <path
                 fillRule="evenodd"
                 clipRule="evenodd"
-                d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.0547 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.044 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.6359 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.1262 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+                d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.05470 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.0440 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.63590 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.12620 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
                 fill=""
               />
             </svg>
@@ -406,14 +486,36 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Avatar URL</Label>
-                  <Input
-                    type="text"
-                    name="avatarUrl"
-                    value={formData?.avatarUrl || ""}
-                    onChange={handleInputChange}
-                    placeholder="Nhập URL ảnh đại diện"
+                  <Label>Avatar</Label> {/* Sửa label từ "Avatar URL" sang "Avatar" */}
+                  <input
+                    type="file" // Sửa type từ "text" sang "file"
+                    name="avatarFile" // Đặt tên khác để tránh nhầm lẫn với avatarUrl string
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                    onChange={handleAvatarFileChange} // Thêm handler mới
+                    accept="image/*" // Chỉ chấp nhận file ảnh
                   />
+                  {avatarPreview && (
+                      <div className="mt-2">
+                          <img
+                              src={avatarPreview} // Luôn dùng avatarPreview để hiển thị ảnh
+                              alt="Xem trước ảnh đại diện"
+                              className="w-24 h-24 object-cover rounded-full"
+                          />
+                      </div>
+                  )}
+                  {/* Nút xóa ảnh hiện tại */}
+                  {formData.avatarUrl && !selectedAvatarFile && (
+                      <button
+                          type="button"
+                          onClick={() => {
+                              setFormData(prev => ({ ...prev, avatarUrl: "" })); // Xóa URL ảnh khỏi form data
+                              setAvatarPreview("/images/user/owner.jpg"); // Hiển thị ảnh mặc định
+                          }}
+                          className="text-red-500 text-sm mt-1 hover:underline"
+                      >
+                          Xóa ảnh hiện tại
+                      </button>
+                  )}
                 </div>
                 <div>
                   <Label>Specialization</Label>
@@ -493,6 +595,8 @@ export default function UserInfoCard() {
           </form>
         </div>
       </Modal>
+      {/* Thêm ToastContainer */}
+      <ToastContainer position="top-right" autoClose={3000} />
     </div>
   );
 }

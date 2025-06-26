@@ -1,3 +1,4 @@
+// Store.tsx
 import React, { useState, useEffect } from "react";
 import api from "../../service/api";
 import url from "../../service/url";
@@ -17,7 +18,7 @@ interface Store {
     openingTime: string | null;
     closingTime: string | null;
     description: string | null;
-    storeImages: string | null;
+    storeImages: string | null; // This will be a URL
     averageRating: number;
     createdAt: string | null;
 }
@@ -30,7 +31,7 @@ interface StoreFormData {
     openingTime: string;
     closingTime: string;
     description: string;
-    storeImages: string;
+    storeImages: string; // This will hold the URL
 }
 
 interface Pagination {
@@ -66,6 +67,10 @@ export function Store() {
         description: "",
         storeImages: "",
     });
+
+    // NEW STATES for image handling
+    const [selectedStoreImage, setSelectedStoreImage] = useState<File | null>(null);
+    const [storeImagePreview, setStoreImagePreview] = useState<string | null>(null);
 
     const fetchStores = async (city: string = "", district: string = "") => {
         try {
@@ -139,17 +144,65 @@ export function Store() {
         }
     };
 
+    // NEW handler for image file input
+    const handleStoreImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedStoreImage(file);
+            setStoreImagePreview(URL.createObjectURL(file)); // Create a preview URL
+        } else {
+            setSelectedStoreImage(null);
+            setStoreImagePreview(null);
+        }
+    };
+
+    // NEW Image Upload Function
+    const uploadImage = async (imageFile: File): Promise<string | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            const response = await api.post<string>(url.UPLOAD.IMAGE, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data; // This will be the URL returned by the backend
+        } catch (error: any) {
+            toast.error(`Không thể tải ảnh lên: ${error.message}`);
+            return null;
+        }
+    };
+
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         try {
+            let imageUrl: string | null = formData.storeImages; // Start with current URL
+
+            if (selectedStoreImage) {
+                // If a new image is selected, upload it
+                imageUrl = await uploadImage(selectedStoreImage);
+                if (!imageUrl) {
+                    // Stop if image upload fails
+                    return;
+                }
+            } else if (formData.storeImages === "" && currentStore?.storeImages) {
+                // If user cleared the field, set URL to empty string
+                imageUrl = "";
+            }
+
+            const dataToSend = {
+                ...formData,
+                storeImages: imageUrl || "", // Use uploaded URL, old URL, or empty string
+            };
+
             if (isEditing && currentStore?.storeId) {
                 await api.put(
                     `${url.STORE.UPDATE}/${currentStore.storeId}`,
-                    formData
+                    dataToSend
                 );
                 toast.success("Cập nhật cửa hàng thành công");
             } else {
-                await api.post(url.STORE.ADD, formData);
+                await api.post(url.STORE.ADD, dataToSend);
                 toast.success("Thêm cửa hàng thành công");
             }
             fetchStores(filterCity, filterDistrict);
@@ -170,6 +223,9 @@ export function Store() {
         setIsViewing(mode === "view");
         setCurrentStore(store || null);
 
+        setSelectedStoreImage(null); // Clear selected file when opening modal
+        setStoreImagePreview(null); // Clear preview
+
         if (store && (mode === "edit" || mode === "view")) {
             setFormData({
                 storeName: store.storeName,
@@ -179,10 +235,16 @@ export function Store() {
                 openingTime: store.openingTime || "",
                 closingTime: store.closingTime || "",
                 description: store.description || "",
-                storeImages: store.storeImages || "",
+                storeImages: store.storeImages || "", // Set existing URL
             });
             if (store.cityProvince) {
                 fetchDistricts(store.cityProvince);
+            }
+            // Set preview if existing image URL is present
+            if (store.storeImages) {
+                // Assuming the backend URL format is ${url.BASE_IMAGES}/images/filename.ext
+                // We need to append BASE_URL for display in the frontend
+                setStoreImagePreview(`${url.BASE_IMAGES}${store.storeImages}`);
             }
         } else {
             setFormData({
@@ -204,6 +266,8 @@ export function Store() {
         setIsEditing(false);
         setIsViewing(false);
         setCurrentStore(null);
+        setSelectedStoreImage(null); // Reset file input state
+        setStoreImagePreview(null); // Reset preview state
     };
 
     const handleFilter = () => {
@@ -241,7 +305,7 @@ export function Store() {
                                 onChange={(e) => setFilterCity(e.target.value)}
                                 placeholder="Tìm theo thành phố..."
                                 className="w-full border border-gray-300 rounded-full py-2 pl-10 pr-10 shadow-sm
-             hover:border-blue-500 
+             hover:border-blue-500
              focus:border-blue-500 focus:outline-none dark:bg-gray-800 dark:text-gray-200" // Added dark mode classes
                             />
 
@@ -399,9 +463,7 @@ export function Store() {
                                                 </Label>
                                                 {formData.storeImages ? (
                                                     <img
-                                                        src={
-                                                            formData.storeImages
-                                                        }
+                                                        src={`${url.BASE_IMAGES}${formData.storeImages}`} // Adjust URL for display
                                                         alt="Store"
                                                         className="w-full max-h-64 rounded-md object-cover"
                                                     />
@@ -579,17 +641,40 @@ export function Store() {
                                                 rows={4}
                                             />
                                         </div>
+                                        {/* NEW: File Input for storeImages */}
                                         <div>
                                             <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
-                                                URL hình ảnh
+                                                Hình ảnh cửa hàng
                                             </Label>
                                             <input
-                                                type="text"
-                                                name="storeImages"
-                                                value={formData.storeImages}
-                                                onChange={handleInputChange}
-                                                className="dark:text-gray-100 mt-1 block w-full border border-gray-300 rounded-md shadow-sm p-2 focus:ring-blue-500 focus:border-blue-500 dark:bg-gray-800 dark:border-gray-700" // Adjusted dark:text-gray-100, dark:border-gray-700
+                                                type="file"
+                                                name="storeImageFile" // Use a different name for file input
+                                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                                onChange={handleStoreImageChange}
+                                                accept="image/*"
                                             />
+                                            {(storeImagePreview || formData.storeImages) && (
+                                                <div className="mt-2">
+                                                    <img
+                                                        src={storeImagePreview || `${url.BASE_IMAGES}${formData.storeImages}`}
+                                                        alt="Xem trước ảnh"
+                                                        className="w-24 h-24 object-cover rounded"
+                                                    />
+                                                </div>
+                                            )}
+                                            {/* Optionally allow clearing the existing image by setting storeImages to empty string */}
+                                            {formData.storeImages && !selectedStoreImage && (
+                                                <button
+                                                    type="button"
+                                                    onClick={() => {
+                                                        setFormData(prev => ({ ...prev, storeImages: "" }));
+                                                        setStoreImagePreview(null);
+                                                    }}
+                                                    className="text-red-500 text-sm mt-1 hover:underline"
+                                                >
+                                                    Xóa ảnh hiện tại
+                                                </button>
+                                            )}
                                         </div>
                                         <div className="col-span-full flex justify-end gap-3 mt-4">
                                             <button

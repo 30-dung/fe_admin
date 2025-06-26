@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; // Import useAuth hook
+import { useAuth } from "@/context/AuthContext"; 
+import url from "@/service/url";
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
@@ -13,7 +14,7 @@ export default function UserDropdown() {
   useEffect(() => {
     // Không cần setState user cục bộ nữa, dùng auth.userProfile trực tiếp
     // Debugging, có thể bỏ dòng này trong production
-    console.log("Auth state in UserDropdown:", auth);
+    // console.log("Auth state in UserDropdown:", auth); // Có thể bỏ dòng này
   }, [auth]); // Chỉ phụ thuộc vào auth
 
   function toggleDropdown() {
@@ -34,11 +35,21 @@ export default function UserDropdown() {
     return null; // Hoặc một spinner nhỏ
   }
 
-  // Sử dụng thông tin từ auth.userProfile và auth.role
+  // Xử lý displayAvatar để đảm bảo URL đầy đủ và ảnh mặc định
+  let displayAvatar = "https://hienthao.com/wp-content/uploads/2023/05/c6e56503cfdd87da299f72dc416023d4.jpg"; // Default avatar
+  if (auth.userProfile?.avatarUrl) {
+    // Kiểm tra nếu URL là tương đối (bắt đầu bằng /)
+    if (auth.userProfile.avatarUrl.startsWith('/')) {
+        displayAvatar = `${url.BASE_IMAGES}${auth.userProfile.avatarUrl}`; // Ghép với BASE_URL
+    } else {
+        displayAvatar = auth.userProfile.avatarUrl; // Nếu là URL đầy đủ (http/https)
+    }
+  }
+
+
   const displayFullName = auth.userProfile?.fullName || "Guest";
   const displayEmail = auth.userProfile?.email || "guest@email.com";
-  const displayAvatar = auth.userProfile?.avatarUrl || "/images/user/owner.jpg";
-
+  
   return (
     <div className="relative">
       <button
@@ -46,7 +57,7 @@ export default function UserDropdown() {
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
         <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src={displayAvatar} alt="User" />
+          <img src={displayAvatar} alt="User" className="w-full h-full object-cover" /> {/* Thêm object-cover */}
         </span>
         <span className="block mr-1 font-medium text-theme-sm">{displayFullName}</span>
         <svg

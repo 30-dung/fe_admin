@@ -1,3 +1,4 @@
+// GetEmp.tsx
 import React, { useEffect, useState } from "react";
 import axios from "service/api";
 import url from "service/url";
@@ -23,11 +24,11 @@ interface Employee {
     employeeId: number;
     employeeCode: string;
     fullName: string;
-    avatarUrl?: string;
+    avatarUrl?: string; // This will be a URL
     email: string;
     phoneNumber?: string;
     gender?: Gender;
-    dateOfBirth?: string;
+    dateOfBirth?: string; // Stored as string (ISO format)
     specialization?: string;
     baseSalary: number;
     commissionRate: number;
@@ -42,9 +43,9 @@ interface EmployeeUpdateDTO {
     email?: string;
     phoneNumber?: string;
     gender?: Gender;
-    dateOfBirth?: string;
+    dateOfBirth?: string; // Send as string (ISO format)
     specialization?: string;
-    avatarUrl?: string;
+    avatarUrl?: string; // This will be the URL
     baseSalary?: number;
     commissionRate?: number;
     salaryType?: SalaryType;
@@ -65,6 +66,28 @@ interface Store {
     storeId: number;
     storeName: string;
 }
+
+// Helper function to format number with dots
+const formatNumberWithDots = (num: number | string | undefined): string => {
+    if (num === undefined || num === null || num === "") {
+        return "";
+    }
+    // Convert to number, then to locale string with 'vi-VN' for dot separator
+    const numberValue = typeof num === 'string' ? parseFloat(num.replace(/\./g, '')) : num;
+    if (isNaN(numberValue)) {
+        return "";
+    }
+    return numberValue.toLocaleString('vi-VN');
+};
+
+// Helper function to parse number from string with dots
+const parseNumberFromFormattedString = (str: string): number => {
+    // Remove all dots and then parse as float
+    const cleanedStr = str.replace(/\./g, '');
+    return parseFloat(cleanedStr);
+};
+
+
 const Modal: React.FC<{
     open: boolean;
     onClose: () => void;
@@ -73,7 +96,8 @@ const Modal: React.FC<{
     if (!open) return null;
     return (
         <div className="fixed inset-0 z-500 flex items-center justify-center bg-black/40 dark:bg-black/60">
-            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 min-w-[400px] relative">
+            {/* Increased max-w-2xl to max-w-4xl for a much wider modal */}
+            <div className="bg-white dark:bg-gray-900 rounded-lg shadow-lg p-6 max-w-4xl w-full relative">
                 <button
                     className="absolute top-2 right-2 text-gray-500 hover:text-gray-700"
                     onClick={onClose}
@@ -93,10 +117,16 @@ const EmployeeList: React.FC = () => {
     const [editingEmp, setEditingEmp] = useState<Employee | null>(null);
     const [updateData, setUpdateData] = useState<EmployeeUpdateDTO>({});
 
-    // THÊM STATE MỚI ĐỂ QUẢN LÝ GIÁ TRỊ STRING CỦA COMMISSION RATE INPUT
     const [commissionRateInput, setCommissionRateInput] = useState<string>("");
+    // NEW STATE for formatted base salary input
+    const [baseSalaryInput, setBaseSalaryInput] = useState<string>("");
 
     const [updating, setUpdating] = useState(false);
+
+    // NEW STATES for avatar image handling
+    const [selectedAvatarFile, setSelectedAvatarFile] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+
 
     // Lấy danh sách cửa hàng
     useEffect(() => {
@@ -135,25 +165,64 @@ const EmployeeList: React.FC = () => {
             email: emp.email,
             phoneNumber: emp.phoneNumber,
             gender: emp.gender,
-            dateOfBirth: emp.dateOfBirth,
+            dateOfBirth: emp.dateOfBirth, // Keep as string (ISO format)
             specialization: emp.specialization,
-            avatarUrl: emp.avatarUrl,
+            avatarUrl: emp.avatarUrl, // Set existing URL
             baseSalary: emp.baseSalary,
-            commissionRate: emp.commissionRate, // Giữ nguyên giá trị number
+            commissionRate: emp.commissionRate,
             salaryType: emp.salaryType,
         });
-        // KHI MỞ MODAL, CẬP NHẬT GIÁ TRỊ STRING CHO INPUT COMMISSION RATE
         setCommissionRateInput(emp.commissionRate !== undefined ? String(emp.commissionRate) : "");
+        // Initialize formatted base salary input
+        setBaseSalaryInput(formatNumberWithDots(emp.baseSalary));
+
+
+        // Set avatar preview if existing avatarUrl is present
+        setSelectedAvatarFile(null); // Clear any previously selected new file
+        if (emp.avatarUrl) {
+            setAvatarPreview(`http://localhost:9090${emp.avatarUrl}`); // Pre-populate with existing image
+        } else {
+            setAvatarPreview(null);
+        }
     };
+
+    // NEW handler for avatar file input
+    const handleAvatarFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedAvatarFile(file);
+            setAvatarPreview(URL.createObjectURL(file)); // Create a preview URL
+        } else {
+            setSelectedAvatarFile(null);
+            setAvatarPreview(null);
+        }
+    };
+
+    // NEW Image Upload Function
+    const uploadImage = async (imageFile: File): Promise<string | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            const response = await axios.post<string>(url.UPLOAD.IMAGE, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data; // This will be the URL returned by the backend
+        } catch (error: any) {
+            toast.error(`Không thể tải ảnh lên: ${error.message}`);
+            return null;
+        }
+    };
+
 
     const handleUpdate = async () => {
         if (!editingEmp) return;
         setUpdating(true);
 
-        // Đảm bảo commissionRate trong updateData là giá trị số từ input string
         const finalCommissionRate = parseFloat(commissionRateInput);
         if (isNaN(finalCommissionRate)) {
-             toast.error("Tỉ lệ hoa hồng không hợp lệ.", { // Thông báo lỗi nếu giá trị cuối cùng không phải số
+             toast.error("Tỉ lệ hoa hồng không hợp lệ.", {
                 position: "top-right",
                 autoClose: 4000,
             });
@@ -161,17 +230,56 @@ const EmployeeList: React.FC = () => {
             return;
         }
 
+        // Parse base salary from formatted string
+        const finalBaseSalary = parseNumberFromFormattedString(baseSalaryInput);
+        if (isNaN(finalBaseSalary) || finalBaseSalary < 0) {
+            toast.error("Lương cơ bản không hợp lệ.", {
+                position: "top-right",
+                autoClose: 4000,
+            });
+            setUpdating(false);
+            return;
+        }
+
+
+        let finalAvatarUrl: string | undefined = updateData.avatarUrl; // Start with current URL in updateData
+
+        if (selectedAvatarFile) {
+            // Upload new image if selected
+            const uploadedUrl = await uploadImage(selectedAvatarFile);
+            if (!uploadedUrl) {
+                setUpdating(false);
+                return; // Stop if image upload fails
+            }
+            finalAvatarUrl = uploadedUrl;
+        } else if (updateData.avatarUrl === "") {
+             // If the user explicitly cleared the existing URL in the form
+            finalAvatarUrl = "";
+        }
+
+
         try {
+            const payload = {
+                ...updateData,
+                baseSalary: finalBaseSalary, // Use parsed number
+                commissionRate: finalCommissionRate,
+                avatarUrl: finalAvatarUrl, // Use the new URL, or existing, or empty string
+            };
+
             await axios.put(
                 url.EMPLOYEE.ADMIN_UPDATE.replace(
                     "{employeeId}",
                     String(editingEmp.employeeId)
                 ),
-                { ...updateData, commissionRate: finalCommissionRate } // Gửi giá trị đã parse
+                payload
             );
             setEditingEmp(null);
             setUpdateData({});
-            setCommissionRateInput(""); // Reset input string state sau khi cập nhật
+            setCommissionRateInput("");
+            setBaseSalaryInput(""); // Clear formatted input
+            setSelectedAvatarFile(null);
+            setAvatarPreview(null);
+
             // Reload employees
             const endpoint = url.EMPLOYEE.GET_BY_STORE.replace(
                 "{storeId}",
@@ -184,7 +292,6 @@ const EmployeeList: React.FC = () => {
                 autoClose: 2000,
             });
         } catch (err: any) {
-            // Hiển thị chi tiết lỗi nếu có
             if (err.response?.data?.errors) {
                 const errorsObj = err.response.data.errors;
                 if (typeof errorsObj === "object") {
@@ -293,7 +400,7 @@ const EmployeeList: React.FC = () => {
                                         <td className="py-2">
                                             {emp.avatarUrl ? (
                                                 <img
-                                                    src={emp.avatarUrl}
+                                                    src={`http://localhost:9090${emp.avatarUrl}`} // Adjust URL
                                                     alt={emp.fullName}
                                                     className="w-10 h-10 rounded-full object-cover dark:text-gray-400"
                                                 />
@@ -343,153 +450,217 @@ const EmployeeList: React.FC = () => {
                 )}
 
                 {/* Modal sửa nhân viên */}
-                <Modal open={!!editingEmp} onClose={() => setEditingEmp(null)}>
+                <Modal open={!!editingEmp} onClose={() => {
+                    setEditingEmp(null);
+                    setAvatarPreview(null); // Clear preview on close
+                    setSelectedAvatarFile(null); // Clear selected file on close
+                }}>
                     <h3 className="font-bold mb-4 text-lg">
                         Cập nhật nhân viên
                     </h3>
-                    <div className="grid grid-cols-2 gap-4">
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Mã nhân viên"
-                            value={updateData.employeeCode || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    employeeCode: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Họ tên"
-                            value={updateData.fullName || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    fullName: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Email"
-                            value={updateData.email || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    email: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Số điện thoại"
-                            value={updateData.phoneNumber || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    phoneNumber: e.target.value,
-                                }))
-                            }
-                        />
-                        <select
-                            className="border p-2 rounded"
-                            value={updateData.gender || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    gender: e.target.value as Gender,
-                                }))
-                            }
-                        >
-                            <option value="">Giới tính</option>
-                            <option value="MALE">Nam</option>
-                            <option value="FEMALE">Nữ</option>
-                            <option value="OTHER">Khác</option>
-                        </select>
-                        <input
-                            className="border p-2 rounded"
-                            type="date"
-                            value={updateData.dateOfBirth?.slice(0, 10) || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    dateOfBirth: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Chuyên môn"
-                            value={updateData.specialization || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    specialization: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            placeholder="Avatar URL"
-                            value={updateData.avatarUrl || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    avatarUrl: e.target.value,
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            type="number"
-                            placeholder="Lương cơ bản"
-                            value={updateData.baseSalary || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    baseSalary: Number(e.target.value),
-                                }))
-                            }
-                        />
-                        <input
-                            className="border p-2 rounded"
-                            type="text" // Giữ type="text" để xử lý nhập liệu linh hoạt hơn
-                            placeholder="Tỉ lệ hoa hồng (ví dụ: 0.07 cho 7%)"
-                            value={commissionRateInput} // KẾT NỐI VỚI STATE CHUỖI MỚI NÀY
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                setCommissionRateInput(value); // CẬP NHẬT STATE CHUỖI ĐỂ HIỂN THỊ TRONG INPUT
+                    {/* Changed grid-cols-2 to grid-cols-3 for a 3-column layout */}
+                    <div className="grid grid-cols-3 gap-4">
+                        {/* Mã nhân viên */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Mã nhân viên</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                placeholder="Mã nhân viên"
+                                value={updateData.employeeCode || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        employeeCode: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Họ tên */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Họ tên</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                placeholder="Họ tên"
+                                value={updateData.fullName || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        fullName: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Email */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Email</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                placeholder="Email"
+                                value={updateData.email || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        email: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Số điện thoại */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Số điện thoại</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                placeholder="Số điện thoại"
+                                value={updateData.phoneNumber || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        phoneNumber: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Giới tính */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Giới tính</span>
+                            <select
+                                className="border p-2 rounded w-full"
+                                value={updateData.gender || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        gender: e.target.value as Gender,
+                                    }))
+                                }
+                            >
+                                <option value="">Chọn giới tính</option>
+                                <option value="MALE">Nam</option>
+                                <option value="FEMALE">Nữ</option>
+                                <option value="OTHER">Khác</option>
+                            </select>
+                        </div>
+                        {/* Ngày sinh */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Ngày sinh</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                type="date"
+                                value={updateData.dateOfBirth?.slice(0, 10) || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        dateOfBirth: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Chuyên môn */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Chuyên môn</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                placeholder="Chuyên môn"
+                                value={updateData.specialization || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        specialization: e.target.value,
+                                    }))
+                                }
+                            />
+                        </div>
+                        {/* Ảnh đại diện - Moved preview and clear button inside this div */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Ảnh đại diện</span>
+                            <input
+                                type="file"
+                                name="avatarFile"
+                                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                onChange={handleAvatarFileChange}
+                                accept="image/*"
+                            />
+                            {/* Image Preview and Clear button */}
+                            {(avatarPreview || updateData.avatarUrl) && (
+                                <div className="mt-2 flex flex-col items-start"> {/* Use flex-col and items-start for stacking */}
+                                    <img
+                                        src={avatarPreview || `http://localhost:9090${updateData.avatarUrl}`}
+                                        alt="Xem trước ảnh đại diện"
+                                        className="w-24 h-24 object-cover rounded-full"
+                                    />
+                                    {/* Option to clear existing avatar if no new file is selected */}
+                                    {updateData.avatarUrl && !selectedAvatarFile && (
+                                        <button
+                                            type="button"
+                                            onClick={() => {
+                                                setUpdateData(prev => ({ ...prev, avatarUrl: "" }));
+                                                setAvatarPreview(null);
+                                            }}
+                                            className="text-red-500 text-sm mt-1 hover:underline"
+                                        >
+                                            Xóa ảnh hiện tại
+                                        </button>
+                                    )}
+                                </div>
+                            )}
+                        </div>
 
-                                // Cố gắng parse thành số float. Nếu người dùng nhập "0." hoặc ".",
-                                // parseFloat vẫn trả về 0 hoặc NaN.
-                                const parsedValue = parseFloat(value);
-
-                                // Cập nhật updateData.commissionRate chỉ khi parsedValue không phải NaN.
-                                // Điều này đảm bảo giá trị gửi đi là số, nhưng input vẫn hiển thị chuỗi đang gõ.
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    // Nếu parse thành công và không phải NaN, sử dụng giá trị đã parse.
-                                    // Ngược lại, nếu input rỗng hoặc không phải số, có thể để undefined/null
-                                    commissionRate: !isNaN(parsedValue) ? parsedValue : undefined,
-                                }));
-                            }}
-                        />
-                        <select
-                            className="border p-2 rounded"
-                            value={updateData.salaryType || ""}
-                            onChange={(e) =>
-                                setUpdateData((d) => ({
-                                    ...d,
-                                    salaryType: e.target.value as SalaryType,
-                                }))
-                            }
-                        >
-                            <option value="">Loại lương</option>
-                            <option value="FIXED">Cố định</option>
-                            <option value="COMMISSION">Hoa hồng</option>
-                            <option value="MIXED">Kết hợp</option>
-                        </select>
+                        {/* Lương cơ bản */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Lương cơ bản (VNĐ)</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                type="text" // Changed to text to allow custom formatting
+                                placeholder="Lương cơ bản"
+                                value={baseSalaryInput} // Bound to new state
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setBaseSalaryInput(formatNumberWithDots(value)); // Format for display
+                                    // Also update the numerical value in updateData for submission
+                                    setUpdateData(prev => ({
+                                        ...prev,
+                                        baseSalary: parseNumberFromFormattedString(value)
+                                    }));
+                                }}
+                            />
+                        </div>
+                        {/* Tỉ lệ hoa hồng */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Tỉ lệ hoa hồng</span>
+                            <input
+                                className="border p-2 rounded w-full"
+                                type="text"
+                                placeholder="Ví dụ: 0.07 cho 7%"
+                                value={commissionRateInput}
+                                onChange={(e) => {
+                                    const value = e.target.value;
+                                    setCommissionRateInput(value);
+                                    const parsedValue = parseFloat(value);
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        commissionRate: !isNaN(parsedValue) ? parsedValue : undefined,
+                                    }));
+                                }}
+                            />
+                        </div>
+                        {/* Loại lương */}
+                        <div>
+                            <span className="block mb-1 text-gray-700 dark:text-gray-200 text-sm">Loại lương</span>
+                            <select
+                                className="border p-2 rounded w-full"
+                                value={updateData.salaryType || ""}
+                                onChange={(e) =>
+                                    setUpdateData((d) => ({
+                                        ...d,
+                                        salaryType: e.target.value as SalaryType,
+                                    }))
+                                }
+                            >
+                                <option value="">Chọn loại lương</option>
+                                <option value="FIXED">Cố định</option>
+                                <option value="COMMISSION">Hoa hồng</option>
+                                <option value="MIXED">Kết hợp</option>
+                            </select>
+                        </div>
                     </div>
                     <div className="mt-6 flex gap-2 justify-end">
                         <button
@@ -501,7 +672,11 @@ const EmployeeList: React.FC = () => {
                         </button>
                         <button
                             className="px-4 py-2 bg-gray-400 text-white rounded"
-                            onClick={() => setEditingEmp(null)}
+                            onClick={() => {
+                                setEditingEmp(null);
+                                setAvatarPreview(null); // Clear preview on cancel
+                                setSelectedAvatarFile(null); // Clear selected file on cancel
+                            }}
                             disabled={updating}
                         >
                             Hủy

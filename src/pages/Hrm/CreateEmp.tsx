@@ -1,3 +1,4 @@
+// CreateEmp.tsx
 import React, { useState, useEffect } from "react";
 import {
     User,
@@ -26,11 +27,11 @@ interface EmployeeRequestDTO {
     password: string;
     phoneNumber: string;
     gender: "MALE" | "FEMALE" | "OTHER";
-    dateOfBirth: Date;
+    dateOfBirth: Date | null; // Có thể là Date object hoặc null
     specialization: string;
     storeId: number;
     roleIds: number[];
-    avatarUrl?: string;
+    avatarUrl?: string; // This will be a URL
 }
 
 interface Store {
@@ -54,7 +55,7 @@ const CreateEmployeeForm = () => {
         password: "",
         phoneNumber: "",
         gender: "MALE",
-        dateOfBirth: new Date(),
+        dateOfBirth: null, // Khởi tạo là null
         specialization: "",
         storeId: 0,
         roleIds: [3],
@@ -71,6 +72,10 @@ const CreateEmployeeForm = () => {
     const [showPassword, setShowPassword] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    // NEW STATES for avatar image handling
+    const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
 
     const validateForm = () => {
         const newErrors: Record<string, string> = {};
@@ -101,9 +106,11 @@ const CreateEmployeeForm = () => {
             newErrors.phoneNumber = "Số điện thoại không đúng định dạng";
         }
 
-        if (!formData.dateOfBirth) {
-            newErrors.dateOfBirth = "Ngày sinh không được để trống";
+        // Sửa phần validation dateOfBirth
+        if (!formData.dateOfBirth || isNaN(formData.dateOfBirth.getTime())) { // Check if it's null/undefined or an "Invalid Date" object
+            newErrors.dateOfBirth = "Ngày sinh không được để trống hoặc không hợp lệ";
         }
+
 
         if (!formData.specialization.trim()) {
             newErrors.specialization = "Chuyên môn không được để trống";
@@ -113,13 +120,36 @@ const CreateEmployeeForm = () => {
             newErrors.storeId = "Vui lòng chọn cửa hàng";
         }
 
+        // For roleIds, ensure '3' (EMPLOYEE) is always selected.
+        if (!formData.roleIds.includes(3)) {
+             newErrors.roleIds = "Vai trò 'Nhân viên' phải được chọn.";
+        }
         if (formData.roleIds.length === 0) {
             newErrors.roleIds = "Vui lòng chọn ít nhất một vai trò";
         }
 
+
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
     };
+
+    // NEW Image Upload Function
+    const uploadImage = async (imageFile: File): Promise<string | null> => {
+        try {
+            const formData = new FormData();
+            formData.append('file', imageFile);
+            const response = await axios.post<string>(url.UPLOAD.IMAGE, formData, {
+                headers: {
+                    'Content-Type': 'multipart/form-data',
+                },
+            });
+            return response.data; // This will be the URL returned by the backend
+        } catch (error: any) {
+            toast.error(`Không thể tải ảnh lên: ${error.message}`);
+            return null;
+        }
+    };
+
 
     const handleSubmit = async () => {
         if (!validateForm()) {
@@ -129,15 +159,32 @@ const CreateEmployeeForm = () => {
         setIsSubmitting(true);
 
         try {
-            // Convert dateOfBirth to ISO string
+            let avatarUrl: string | null = formData.avatarUrl || ""; // Start with current URL
+
+            if (selectedAvatar) {
+                // If a new image is selected, upload it
+                avatarUrl = await uploadImage(selectedAvatar);
+                if (!avatarUrl) {
+                    // Stop if image upload fails
+                    setIsSubmitting(false);
+                    return;
+                }
+            } else if (formData.avatarUrl === "") {
+                // If the user cleared the field and no new file selected
+                 avatarUrl = ""; // Explicitly set to empty if cleared
+            }
+
+
+            // Convert dateOfBirth to ISO string format (YYYY-MM-DDTHH:mm:ss) expected by backend
+            // Ensure dateOfBirth is a valid Date object before calling toISOString()
+            const dateOfBirthISO = formData.dateOfBirth && !isNaN(formData.dateOfBirth.getTime())
+                ? formData.dateOfBirth.toISOString().slice(0, 19)
+                : null; // Hoặc một giá trị mặc định nếu ngày sinh là bắt buộc
+
             const payload = {
                 ...formData,
-                dateOfBirth:
-                    formData.dateOfBirth instanceof Date
-                        ? formData.dateOfBirth.toISOString().slice(0, 19)
-                        : new Date(formData.dateOfBirth)
-                              .toISOString()
-                              .slice(0, 19),
+                dateOfBirth: dateOfBirthISO, // Pass the formatted string or null
+                avatarUrl: avatarUrl, // Use the uploaded URL or existing one
             };
 
             const response = await axios.post(url.EMPLOYEE.CREATE, payload, {
@@ -160,12 +207,14 @@ const CreateEmployeeForm = () => {
                     password: "",
                     phoneNumber: "",
                     gender: "MALE",
-                    dateOfBirth: new Date(),
+                    dateOfBirth: null, // Reset về null
                     specialization: "",
                     storeId: 0,
                     roleIds: [3],
                     avatarUrl: "",
                 });
+                setSelectedAvatar(null); // Clear selected file
+                setAvatarPreview(null); // Clear preview
             } else {
                 toast.error(
                     `Lỗi: ${
@@ -217,10 +266,20 @@ const CreateEmployeeForm = () => {
         >
     ) => {
         const { name, value } = e.target;
-        setFormData((prev) => ({
-            ...prev,
-            [name]: value,
-        }));
+        // Special handling for dateOfBirth to convert string to Date object
+        if (name === "dateOfBirth") {
+            setFormData((prev) => ({
+                ...prev,
+                // Nếu value rỗng, gán null để validation bắt lỗi. Nếu có giá trị, tạo Date object.
+                dateOfBirth: value ? new Date(value) : null,
+            }));
+        } else {
+            setFormData((prev) => ({
+                ...prev,
+                [name]: value,
+            }));
+        }
+
 
         // Clear error when user starts typing
         if (errors[name]) {
@@ -228,6 +287,18 @@ const CreateEmployeeForm = () => {
                 ...prev,
                 [name]: "",
             }));
+        }
+    };
+
+    // NEW handler for avatar file input
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (e.target.files && e.target.files[0]) {
+            const file = e.target.files[0];
+            setSelectedAvatar(file);
+            setAvatarPreview(URL.createObjectURL(file)); // Create a preview URL
+        } else {
+            setSelectedAvatar(null);
+            setAvatarPreview(null);
         }
     };
 
@@ -437,7 +508,8 @@ const CreateEmployeeForm = () => {
                                     <Input
                                         type="date"
                                         name="dateOfBirth"
-                                        value={formData.dateOfBirth}
+                                        // Format date to YYYY-MM-DD for input type="date"
+                                        value={formData.dateOfBirth ? formData.dateOfBirth.toISOString().slice(0, 10) : ""}
                                         onChange={handleInputChange}
                                         className={`text-gray-700 dark:bg-gray-900 dark:text-gray-400 w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                             errors.dateOfBirth
@@ -525,18 +597,23 @@ const CreateEmployeeForm = () => {
                                 )}
                             </div>
 
+                            {/* NEW: File Input for Avatar URL */}
                             <div>
-                                <Label className="block text-sm font-medium text-gray-700 mb-1">
-                                    URL Avatar
+                                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                    Ảnh đại diện
                                 </Label>
-                                <Input
-                                    type="url"
-                                    name="avatarUrl"
-                                    value={formData.avatarUrl}
-                                    onChange={handleInputChange}
-                                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                                    placeholder="Nhập URL ảnh đại diện"
+                                <input
+                                    type="file"
+                                    name="avatarFile"
+                                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
+                                    onChange={handleAvatarChange}
+                                    accept="image/*"
                                 />
+                                {avatarPreview && (
+                                    <div className="mt-2">
+                                        <img src={avatarPreview} alt="Xem trước ảnh đại diện" className="w-24 h-24 object-cover rounded-full" />
+                                    </div>
+                                )}
                             </div>
                         </div>
 
@@ -546,8 +623,31 @@ const CreateEmployeeForm = () => {
                                 <Shield className="inline h-4 w-4 ml-1" />
                             </Label>
                             <div className="dark:text-gray-400 font-semibold">
+                                {/* Only display EMPLOYEE role for now as per your original code's fixed roleIds */}
                                 Nhân viên
+                                {/* If you want to allow admin to assign roles, you'd need checkboxes for roles: */}
+                                {/*
+                                {roles.map(role => (
+                                    <div key={role.id}>
+                                        <input
+                                            type="checkbox"
+                                            id={`role-${role.id}`}
+                                            name="roleIds"
+                                            value={role.id}
+                                            checked={formData.roleIds.includes(role.id)}
+                                            onChange={() => handleRoleChange(role.id)}
+                                            className="mr-2"
+                                        />
+                                        <label htmlFor={`role-${role.id}`}>{role.name} ({role.description})</label>
+                                    </div>
+                                ))}
+                                */}
                             </div>
+                            {errors.roleIds && (
+                                <p className="text-red-500 text-xs mt-1">
+                                    {errors.roleIds}
+                                </p>
+                            )}
                         </div>
                     </div>
 
@@ -558,6 +658,25 @@ const CreateEmployeeForm = () => {
                         <button
                             type="button"
                             className="px-6 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                            onClick={() => {
+                                // Reset form and image states on cancel
+                                setFormData({
+                                    employeeCode: "",
+                                    fullName: "",
+                                    email: "",
+                                    password: "",
+                                    phoneNumber: "",
+                                    gender: "MALE",
+                                    dateOfBirth: null, // Reset về null
+                                    specialization: "",
+                                    storeId: 0,
+                                    roleIds: [3],
+                                    avatarUrl: "",
+                                });
+                                setSelectedAvatar(null);
+                                setAvatarPreview(null);
+                                setErrors({}); // Clear errors
+                            }}
                         >
                             Hủy
                         </button>
