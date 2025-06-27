@@ -393,7 +393,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
             }}
         >
             <div
-                className={`py-8 flex ${
+                className={`py-8 px-5 flex ${
                     !isExpanded && !isHovered
                         ? "lg:justify-center"
                         : "justify-start"
@@ -404,14 +404,14 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
                         <>
                             <img
                                 className="dark:hidden"
-                                src="/images/logo/logo.svg"
+                                src="/images/logo/logo1bar.svg"
                                 alt="Logo"
                                 width={150}
                                 height={40}
                             />
                             <img
                                 className="hidden dark:block"
-                                src="/images/logo/logo-dark.svg"
+                                src="/images/logo/logo2bar.svg"
                                 alt="Logo"
                                 width={150}
                                 height={40}
@@ -419,7 +419,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
                         </>
                     ) : (
                         <img
-                            src="/images/logo/logo-icon.svg"
+                            src="/images/logo/logo1icon.svg"
                             alt="Logo"
                             width={32}
                             height={32}

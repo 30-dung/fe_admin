@@ -170,6 +170,38 @@ const Calendar: React.FC = () => {
       />
       <div className="rounded-2xl border border-gray-200 bg-white dark:border-gray-800 dark:bg-white/[0.03]">
         <div className="custom-calendar">
+          <style>
+            {`
+              .fc-daygrid-day {
+                height: 80px !important;
+                min-height: 80px !important;
+              }
+              .fc-daygrid-day-frame {
+                min-height: 80px !important;
+              }
+              .fc-daygrid-day-top {
+                flex-direction: row;
+                justify-content: center;
+              }
+              .fc-daygrid-day-number {
+                padding: 4px 6px;
+                font-size: 0.9rem;
+              }
+              .fc-event {
+                font-size: 0.75rem;
+                margin-bottom: 1px;
+              }
+              .fc-event-title {
+                font-size: 0.7rem;
+              }
+              .fc-col-header-cell {
+                height: 40px;
+              }
+              .fc-scrollgrid-section-body > td {
+                border-color: #e5e7eb;
+              }
+            `}
+          </style>
           <FullCalendar
             plugins={[dayGridPlugin, interactionPlugin]}
             initialView="dayGridMonth"
@@ -183,6 +215,8 @@ const Calendar: React.FC = () => {
             select={handleDateSelect}
             eventClick={handleEventClick}
             eventContent={renderEventContent}
+            height="auto"
+            dayMaxEvents={3}
             customButtons={{
               addEventButton: {
                 text: "Thêm ca làm +",

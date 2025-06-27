@@ -47,6 +47,7 @@ export default function BasicTableOne() {
   // NEW STATES FOR CONFIRMATION MODALS
   const [isCancelConfirmModalOpen, setIsCancelConfirmModalOpen] = useState(false);
   const [isRejectConfirmModalOpen, setIsRejectConfirmModalOpen] = useState(false);
+  const [isCompleteConfirmModalOpen, setIsCompleteConfirmModalOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState(""); // State để lưu lý do từ chối
 
   const getEmployeeEmail = useCallback(async () => {
@@ -184,6 +185,7 @@ export default function BasicTableOne() {
     // Reset all confirmation modals and states when main modal closes
     setIsCancelConfirmModalOpen(false);
     setIsRejectConfirmModalOpen(false);
+    setIsCompleteConfirmModalOpen(false);
     setRejectReason("");
     setIsProcessing(false);
   };
@@ -300,6 +302,32 @@ export default function BasicTableOne() {
     } finally {
       setIsProcessing(false);
       closeModal();
+    }
+  };
+
+  // NEW: Open Complete Confirmation Modal
+  const openCompleteConfirmModal = () => {
+    setIsModalOpen(false); // Close main detail modal
+    setIsCompleteConfirmModalOpen(true);
+  };
+
+  // NEW: Handle Complete (from confirmation modal)
+  const handleCompleteConfirm = async () => {
+    if (isProcessing || !selectedAppointment) return;
+    setIsProcessing(true);
+    try {
+      await axios.patch(url.APPOINTMENT.COMPLETE.replace("${id}", selectedAppointment.appointmentId.toString()));
+      if (auth.email) {
+        fetchAppointments(statusFilter, timeRangeFilter, auth.email);
+      }
+      toast.success("Hoàn thành lịch hẹn thành công!"); // Toast notification
+      setSelectedAppointment(null);
+    } catch (error: any) {
+      console.error("Lỗi khi hoàn thành lịch hẹn:", error.response?.data || error.message);
+      toast.error(`Hoàn thành thất bại: ${error.response?.data || "Lỗi không xác định"}`); // Toast error
+    } finally {
+      setIsProcessing(false);
+      closeModal(); // This will also close isCompleteConfirmModalOpen
     }
   };
 
@@ -438,26 +466,79 @@ export default function BasicTableOne() {
         </div>
       )}
       {/* Main Detail Modal */}
-      <Modal isOpen={isModalOpen} onClose={closeModal} className="max-w-md p-6 bg-white dark:bg-gray-800 rounded-xl shadow-lg">
-        {selectedAppointment && (
+      <Modal isOpen={isModalOpen} onClose={closeModal} className="max-w-3xl p-8 bg-white dark:bg-gray-800 rounded-xl shadow-lg">{selectedAppointment && (
           <div>
-            <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Chi tiết lịch hẹn</h2>
-            <div className="mb-3 text-gray-700 dark:text-gray-300"><b>Nhân viên:</b> {selectedAppointment.employeeName}</div>
-            <div className="mb-3 text-gray-700 dark:text-gray-300"><b>Khách hàng:</b> {selectedAppointment.userName}</div>
-            <div className="mb-3 text-gray-700 dark:text-gray-300"><b>Dịch vụ:</b> {selectedAppointment.serviceName}</div>
-            <div className="mb-3 text-gray-700 dark:text-gray-300">
-              <b>Ngày bắt đầu:</b> {new Date(selectedAppointment.startTime).toLocaleDateString("vi-VN")}
+            <h2 className="text-2xl font-bold mb-8 text-gray-800 dark:text-gray-200 border-b border-gray-200 dark:border-gray-600 pb-4">
+              Chi tiết lịch hẹn
+            </h2>
+            
+            {/* Grid layout cho thông tin */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+              <div className="space-y-6">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Nhân viên phụ trách</label>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{selectedAppointment.employeeName}</p>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Dịch vụ</label>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{selectedAppointment.serviceName}</p>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Ngày thực hiện</label>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    {new Date(selectedAppointment.startTime).toLocaleDateString("vi-VN", { 
+                      weekday: 'long', 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+              </div>
+              
+              <div className="space-y-6">
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Khách hàng</label>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">{selectedAppointment.userName}</p>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Thời gian</label>
+                  <p className="text-lg font-semibold text-gray-800 dark:text-gray-200">
+                    {new Date(selectedAppointment.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} -{" "}
+                    {new Date(selectedAppointment.endTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+                
+                <div className="bg-gray-50 dark:bg-gray-700/50 p-4 rounded-lg">
+                  <label className="block text-sm font-medium text-gray-500 dark:text-gray-400 mb-2">Trạng thái</label>
+                  <div className="flex items-center">
+                    <Badge size="sm" color={getStatusColor(selectedAppointment.status)}>
+                      {selectedAppointment.status}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
             </div>
-            <div className="mb-3 text-gray-700 dark:text-gray-300">
-              <b>Thời gian:</b>{" "}
-              {new Date(selectedAppointment.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })} -{" "}
-              {new Date(selectedAppointment.endTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
-            </div>
-            <div className="mb-3 flex items-center gap-2 text-gray-700 dark:text-gray-300">
-              <b>Trạng thái:</b>
-              <Badge size="sm" color={getStatusColor(selectedAppointment.status)}>
-                {selectedAppointment.status}
-              </Badge>
+            
+            {/* Thông tin bổ sung */}
+            <div className="bg-blue-50 dark:bg-blue-900/20 p-6 rounded-lg mb-8">
+              <h3 className="text-lg font-semibold text-blue-800 dark:text-blue-200 mb-4">Thông tin bổ sung</h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 dark:text-blue-300 mb-1">Cửa hàng</label>
+                  <p className="text-gray-700 dark:text-gray-300">{selectedAppointment.storeName}</p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-blue-600 dark:text-blue-300 mb-1">Ngày đặt lịch</label>
+                  <p className="text-gray-700 dark:text-gray-300">
+                    {new Date(selectedAppointment.createdAt).toLocaleDateString("vi-VN")} lúc{" "}
+                    {new Date(selectedAppointment.createdAt).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                </div>
+              </div>
             </div>
             {selectedAppointment.status === "Pending" && (
               <div className="flex justify-end gap-2 mt-6">
@@ -481,7 +562,7 @@ export default function BasicTableOne() {
               <div className="flex justify-end gap-2 mt-6">
                 <button
                   className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:bg-green-300 transition"
-                  onClick={() => handleComplete(selectedAppointment.appointmentId)}
+                  onClick={openCompleteConfirmModal} // Mở modal xác nhận hoàn thành
                   disabled={isProcessing}
                 >
                   {isProcessing ? "Đang xử lý..." : "Hoàn thành"}
@@ -529,7 +610,7 @@ export default function BasicTableOne() {
       </Modal>
 
       {/* Modal Xác nhận Từ chối lịch (với lý do) */}
-      <Modal isOpen={isRejectConfirmModalOpen} onClose={closeModal} className="max-w-sm p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+      <Modal isOpen={isRejectConfirmModalOpen} onClose={closeModal} className="max-w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
           {selectedAppointment && (
               <div>
                   <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Từ chối lịch hẹn</h2>
@@ -564,6 +645,35 @@ export default function BasicTableOne() {
                           disabled={isProcessing}
                       >
                           {isProcessing ? "Đang từ chối..." : "Có, từ chối lịch"}
+                      </button>
+                  </div>
+              </div>
+          )}
+      </Modal>
+
+      {/* Modal Xác nhận Hoàn thành lịch */}
+      <Modal isOpen={isCompleteConfirmModalOpen} onClose={closeModal} className="max-w-md p-6 bg-white dark:bg-gray-800 rounded-lg shadow-lg">
+          {selectedAppointment && (
+              <div>
+                  <h2 className="text-lg font-bold mb-4 text-gray-800 dark:text-gray-200">Hoàn thành lịch hẹn</h2>
+                  <p className="mb-4 text-gray-700 dark:text-gray-300">
+                      Bạn có chắc chắn muốn hoàn thành lịch hẹn dịch vụ <b>{selectedAppointment.serviceName}</b> của khách hàng <b>{selectedAppointment.userName}</b> vào lúc <b>{new Date(selectedAppointment.startTime).toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })}</b> ngày <b>{new Date(selectedAppointment.startTime).toLocaleDateString("vi-VN")}</b> không?
+                  </p>
+                  <div className="flex justify-end gap-2 mt-4">
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400 transition"
+                          onClick={closeModal} // Đóng modal hiện tại (modal xác nhận hoàn thành)
+                      >
+                          Không
+                      </button>
+                      <button
+                          type="button"
+                          className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition disabled:opacity-50"
+                          onClick={handleCompleteConfirm} // Gọi hàm handleCompleteConfirm
+                          disabled={isProcessing}
+                      >
+                          {isProcessing ? "Đang hoàn thành..." : "Có, hoàn thành lịch"}
                       </button>
                   </div>
               </div>
