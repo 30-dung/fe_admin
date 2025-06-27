@@ -27,7 +27,7 @@ interface EmployeeRequestDTO {
     password: string;
     phoneNumber: string;
     gender: "MALE" | "FEMALE" | "OTHER";
-    dateOfBirth: Date | null; // Có thể là Date object hoặc null
+    dateOfBirth: string; // Changed to string for easier handling with input type="date"
     specialization: string;
     storeId: number;
     roleIds: number[];
@@ -55,7 +55,7 @@ const CreateEmployeeForm = () => {
         password: "",
         phoneNumber: "",
         gender: "MALE",
-        dateOfBirth: null, // Khởi tạo là null
+        dateOfBirth: "", // Khởi tạo là empty string
         specialization: "",
         storeId: 0,
         roleIds: [3],
@@ -107,10 +107,20 @@ const CreateEmployeeForm = () => {
         }
 
         // Sửa phần validation dateOfBirth
-        if (!formData.dateOfBirth || isNaN(formData.dateOfBirth.getTime())) { // Check if it's null/undefined or an "Invalid Date" object
-            newErrors.dateOfBirth = "Ngày sinh không được để trống hoặc không hợp lệ";
+        if (!formData.dateOfBirth.trim()) {
+            newErrors.dateOfBirth = "Ngày sinh không được để trống";
+        } else {
+            // Validate date format and check if it's a valid date
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(formData.dateOfBirth)) {
+                newErrors.dateOfBirth = "Ngày sinh không đúng định dạng";
+            } else {
+                const date = new Date(formData.dateOfBirth);
+                if (isNaN(date.getTime())) {
+                    newErrors.dateOfBirth = "Ngày sinh không hợp lệ";
+                }
+            }
         }
-
 
         if (!formData.specialization.trim()) {
             newErrors.specialization = "Chuyên môn không được để trống";
@@ -122,12 +132,11 @@ const CreateEmployeeForm = () => {
 
         // For roleIds, ensure '3' (EMPLOYEE) is always selected.
         if (!formData.roleIds.includes(3)) {
-             newErrors.roleIds = "Vai trò 'Nhân viên' phải được chọn.";
+            newErrors.roleIds = "Vai trò 'Nhân viên' phải được chọn.";
         }
         if (formData.roleIds.length === 0) {
             newErrors.roleIds = "Vui lòng chọn ít nhất một vai trò";
         }
-
 
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -137,19 +146,22 @@ const CreateEmployeeForm = () => {
     const uploadImage = async (imageFile: File): Promise<string | null> => {
         try {
             const formData = new FormData();
-            formData.append('file', imageFile);
-            const response = await axios.post<string>(url.UPLOAD.IMAGE, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            formData.append("file", imageFile);
+            const response = await axios.post<string>(
+                url.UPLOAD.IMAGE,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
             return response.data; // This will be the URL returned by the backend
         } catch (error: any) {
             toast.error(`Không thể tải ảnh lên: ${error.message}`);
             return null;
         }
     };
-
 
     const handleSubmit = async () => {
         if (!validateForm()) {
@@ -171,15 +183,14 @@ const CreateEmployeeForm = () => {
                 }
             } else if (formData.avatarUrl === "") {
                 // If the user cleared the field and no new file selected
-                 avatarUrl = ""; // Explicitly set to empty if cleared
+                avatarUrl = ""; // Explicitly set to empty if cleared
             }
 
-
             // Convert dateOfBirth to ISO string format (YYYY-MM-DDTHH:mm:ss) expected by backend
-            // Ensure dateOfBirth is a valid Date object before calling toISOString()
-            const dateOfBirthISO = formData.dateOfBirth && !isNaN(formData.dateOfBirth.getTime())
-                ? formData.dateOfBirth.toISOString().slice(0, 19)
-                : null; // Hoặc một giá trị mặc định nếu ngày sinh là bắt buộc
+            // formData.dateOfBirth is already a string in YYYY-MM-DD format
+            const dateOfBirthISO = formData.dateOfBirth
+                ? `${formData.dateOfBirth}T00:00:00` // Add time component for backend
+                : null;
 
             const payload = {
                 ...formData,
@@ -207,7 +218,7 @@ const CreateEmployeeForm = () => {
                     password: "",
                     phoneNumber: "",
                     gender: "MALE",
-                    dateOfBirth: null, // Reset về null
+                    dateOfBirth: "", // Reset về empty string
                     specialization: "",
                     storeId: 0,
                     roleIds: [3],
@@ -266,20 +277,12 @@ const CreateEmployeeForm = () => {
         >
     ) => {
         const { name, value } = e.target;
-        // Special handling for dateOfBirth to convert string to Date object
-        if (name === "dateOfBirth") {
-            setFormData((prev) => ({
-                ...prev,
-                // Nếu value rỗng, gán null để validation bắt lỗi. Nếu có giá trị, tạo Date object.
-                dateOfBirth: value ? new Date(value) : null,
-            }));
-        } else {
-            setFormData((prev) => ({
-                ...prev,
-                [name]: value,
-            }));
-        }
 
+        // For dateOfBirth, directly use the string value from input type="date"
+        setFormData((prev) => ({
+            ...prev,
+            [name]: value,
+        }));
 
         // Clear error when user starts typing
         if (errors[name]) {
@@ -508,8 +511,8 @@ const CreateEmployeeForm = () => {
                                     <Input
                                         type="date"
                                         name="dateOfBirth"
-                                        // Format date to YYYY-MM-DD for input type="date"
-                                        value={formData.dateOfBirth ? formData.dateOfBirth.toISOString().slice(0, 10) : ""}
+                                        // Use the string value directly for input type="date"
+                                        value={formData.dateOfBirth}
                                         onChange={handleInputChange}
                                         className={`text-gray-700 dark:bg-gray-900 dark:text-gray-400 w-full pl-10 pr-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 ${
                                             errors.dateOfBirth
@@ -611,7 +614,11 @@ const CreateEmployeeForm = () => {
                                 />
                                 {avatarPreview && (
                                     <div className="mt-2">
-                                        <img src={avatarPreview} alt="Xem trước ảnh đại diện" className="w-24 h-24 object-cover rounded-full" />
+                                        <img
+                                            src={avatarPreview}
+                                            alt="Xem trước ảnh đại diện"
+                                            className="w-24 h-24 object-cover rounded-full"
+                                        />
                                     </div>
                                 )}
                             </div>
@@ -667,7 +674,7 @@ const CreateEmployeeForm = () => {
                                     password: "",
                                     phoneNumber: "",
                                     gender: "MALE",
-                                    dateOfBirth: null, // Reset về null
+                                    dateOfBirth: "", // Reset về empty string
                                     specialization: "",
                                     storeId: 0,
                                     roleIds: [3],
