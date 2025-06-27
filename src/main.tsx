@@ -9,22 +9,23 @@ import { ThemeProvider } from "./context/ThemeContext.tsx";
 import { ToastContainer } from "react-toastify";
 
 createRoot(document.getElementById("root")!).render(
-  <StrictMode>
-    <ThemeProvider>
-      <AppWrapper>
-        <App />
-        <ToastContainer
-      position="top-right"
-      autoClose={3000}
-      hideProgressBar={false}
-      newestOnTop={false}
-      closeOnClick
-      rtl={false}
-      pauseOnFocusLoss
-      draggable
-      pauseOnHover
-    />
-      </AppWrapper>
-    </ThemeProvider>
-  </StrictMode>,
+    <StrictMode>
+        <ThemeProvider>
+            <AppWrapper>
+                <App />
+                <ToastContainer
+                    position="top-right"
+                    autoClose={3000}
+                    hideProgressBar={false}
+                    newestOnTop={false}
+                    closeOnClick
+                    rtl={false}
+                    pauseOnFocusLoss
+                    draggable
+                    pauseOnHover
+                    style={{ zIndex: 9999 }} // Thêm dòng này
+                />
+            </AppWrapper>
+        </ThemeProvider>
+    </StrictMode>
 );
