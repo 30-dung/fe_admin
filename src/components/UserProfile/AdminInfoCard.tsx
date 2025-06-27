@@ -71,15 +71,15 @@ export default function AdminInfoCard() {
         .then((res) => {
           setUser({ ...editUser, email: res.data.email }); // Cập nhật email từ response nếu cần
           console.log("Update successful:", res.data);
-          toast.success("Profile updated successfully!");
+          toast.success("Cập nhật hồ sơ thành công!");
           closeEditModal();
         })
         .catch((error) => {
           console.error("Error updating user:", error);
           if (error.response && error.response.status === 400) {
-            toast.error(error.response.data.message || "Update failed");
+            toast.error(error.response.data.message || "Cập nhật thất bại");
           } else {
-            toast.error("An error occurred while updating profile");
+            toast.error("Đã xảy ra lỗi khi cập nhật hồ sơ");
           }
         });
     }
@@ -87,7 +87,7 @@ export default function AdminInfoCard() {
 
   const handleChangePassword = () => {
     if (passwordData.newPassword !== passwordData.confirmPassword) {
-      toast.error("New password and confirmation do not match");
+      toast.error("Mật khẩu mới và xác nhận mật khẩu không khớp");
       return;
     }
     const requestData: ChangePasswordRequest = {
@@ -101,16 +101,16 @@ export default function AdminInfoCard() {
       })
       .then((res) => {
         console.log("Password changed successfully:", res.data);
-        toast.success("Password changed successfully!");
+        toast.success("Đổi mật khẩu thành công!");
         setPasswordData({ currentPassword: "", newPassword: "", confirmPassword: "" }); // Reset form
         closePasswordModal();
       })
       .catch((error) => {
         console.error("Error changing password:", error);
         if (error.response && error.response.status === 400) {
-          toast.error(error.response.data.message || "Password change failed");
+          toast.error(error.response.data.message || "Đổi mật khẩu thất bại");
         } else {
-          toast.error("An error occurred while changing password");
+          toast.error("Đã xảy ra lỗi khi đổi mật khẩu");
         }
       });
   };
@@ -129,7 +129,7 @@ export default function AdminInfoCard() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+            Thông tin cá nhân
           </h4>
           <div className="flex flex-col items-center w-full gap-6 lg:flex-row lg:items-start">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
@@ -152,7 +152,7 @@ export default function AdminInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone Number
+                Số điện thoại
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {user?.phoneNumber || ""}
@@ -184,7 +184,7 @@ export default function AdminInfoCard() {
                 fill=""
               />
             </svg>
-            Edit Profile
+            Chỉnh sửa hồ sơ
           </button>
           <button
             onClick={() => {
@@ -208,7 +208,7 @@ export default function AdminInfoCard() {
                 fill=""
               />
             </svg>
-            Change Password
+            Đổi mật khẩu
           </button>
         </div>
       </div>
@@ -217,17 +217,17 @@ export default function AdminInfoCard() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
+              Chỉnh sửa thông tin cá nhân
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
+              Cập nhật thông tin của bạn để giữ hồ sơ luôn mới nhất.
             </p>
           </div>
           <form className="flex flex-col">
             <div className="custom-scrollbar h-[250px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Full Name</Label>
+                  <Label>Họ và tên</Label>
                   <Input
                     type="text"
                     name="fullName"
@@ -246,7 +246,7 @@ export default function AdminInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Phone Number</Label>
+                  <Label>Số điện thoại</Label>
                   <Input
                     type="text"
                     name="phoneNumber"
@@ -258,10 +258,10 @@ export default function AdminInfoCard() {
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeEditModal}>
-                Close
+                Đóng
               </Button>
               <Button size="sm" onClick={handleSave}>
-                Save Changes
+                Lưu thay đổi
               </Button>
             </div>
           </form>
@@ -272,17 +272,17 @@ export default function AdminInfoCard() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Change Password
+              Đổi mật khẩu
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your password securely.
+              Cập nhật mật khẩu của bạn một cách bảo mật.
             </p>
           </div>
           <form className="flex flex-col">
             <div className="custom-scrollbar h-[250px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Current Password</Label>
+                  <Label>Mật khẩu hiện tại</Label>
                   <Input
                     type="password"
                     name="currentPassword"
@@ -291,7 +291,7 @@ export default function AdminInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>New Password</Label>
+                  <Label>Mật khẩu mới</Label>
                   <Input
                     type="password"
                     name="newPassword"
@@ -300,7 +300,7 @@ export default function AdminInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Confirm New Password</Label>
+                  <Label>Xác nhận mật khẩu mới</Label>
                   <Input
                     type="password"
                     name="confirmPassword"
@@ -312,10 +312,10 @@ export default function AdminInfoCard() {
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closePasswordModal}>
-                Close
+                Đóng
               </Button>
               <Button size="sm" onClick={handleChangePassword}>
-                Change Password
+                Đổi mật khẩu
               </Button>
             </div>
           </form>
