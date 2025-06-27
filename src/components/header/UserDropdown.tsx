@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext"; 
+import { useAuth } from "@/context/AuthContext";
 import url from "@/service/url";
 
 export default function UserDropdown() {
@@ -36,10 +36,12 @@ export default function UserDropdown() {
   }
 
   // Xử lý displayAvatar để đảm bảo URL đầy đủ và ảnh mặc định
-  let displayAvatar = "https://hienthao.com/wp-content/uploads/2023/05/c6e56503cfdd87da299f72dc416023d4.jpg"; // Default avatar
-  if (auth.userProfile?.avatarUrl) {
-    // Kiểm tra nếu URL là tương đối (bắt đầu bằng /)
-    if (auth.userProfile.avatarUrl.startsWith('/')) {
+  let displayAvatar = "https://hienthao.com/wp-content/uploads/2023/05/c6e56503cfdd87da299f72dc416023d4.jpg"; // Default avatar for admin or if no specific avatar
+
+  if (auth.role && auth.role.includes("ROLE_ADMIN")) { // Kiểm tra nếu là ADMIN
+    displayAvatar = "https://hienthao.com/wp-content/uploads/2023/05/c6e56503cfdd87da299f72dc416023d4.jpg"; // Ảnh mặc định cho admin
+  } else if (auth.userProfile?.avatarUrl) { // Nếu không phải admin và có avatarUrl trong userProfile (trường hợp employee)
+    if (auth.userProfile.avatarUrl.startsWith('/')) { // Kiểm tra nếu URL là tương đối
         displayAvatar = `${url.BASE_IMAGES}${auth.userProfile.avatarUrl}`; // Ghép với BASE_URL
     } else {
         displayAvatar = auth.userProfile.avatarUrl; // Nếu là URL đầy đủ (http/https)
@@ -47,9 +49,9 @@ export default function UserDropdown() {
   }
 
 
-  const displayFullName = auth.userProfile?.fullName || "Guest";
-  const displayEmail = auth.userProfile?.email || "guest@email.com";
-  
+  const displayFullName = auth.userProfile?.fullName || "Guest"; // Lấy fullName từ userProfile
+  const displayEmail = auth.userProfile?.email || "guest@email.com"; // Lấy email từ userProfile
+
   return (
     <div className="relative">
       <button
@@ -100,7 +102,7 @@ export default function UserDropdown() {
               onItemClick={closeDropdown}
               tag="a"
               // Sử dụng auth.role để xác định link profile
-              to={auth.role && auth.role.includes("ROLE_ADMIN") ? "/admin-profile" : "/profile"}
+              to={auth.role && auth.role.includes("ROLE_ADMIN") ? "/admin-profile" : "/profile"} //
               className="flex items-center gap-3 px-3 py-2 font-medium text-gray-700 rounded-lg group text-theme-sm hover:bg-gray-100 hover:text-gray-700 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-gray-300"
             >
               Edit profile
