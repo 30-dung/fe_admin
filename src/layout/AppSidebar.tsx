@@ -120,7 +120,7 @@ const navItems: NavItem[] = [
         path: "/customer",
         roles: ["ROLE_ADMIN"],
     },
-     {
+    {
         icon: <CalenderIcon />,
         name: "Lời góp ý",
         path: "/feedback",

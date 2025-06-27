@@ -43,6 +43,7 @@ interface Pagination {
 
 export function Store() {
     const [stores, setStores] = useState<Store[]>([]);
+    const [allStores, setAllStores] = useState<Store[]>([]); // Store all data for pagination
     const [filterCity, setFilterCity] = useState("");
     const [filterDistrict, setFilterDistrict] = useState("");
     const [cities, setCities] = useState<string[]>([]);
@@ -69,8 +70,12 @@ export function Store() {
     });
 
     // NEW STATES for image handling
-    const [selectedStoreImage, setSelectedStoreImage] = useState<File | null>(null);
-    const [storeImagePreview, setStoreImagePreview] = useState<string | null>(null);
+    const [selectedStoreImage, setSelectedStoreImage] = useState<File | null>(
+        null
+    );
+    const [storeImagePreview, setStoreImagePreview] = useState<string | null>(
+        null
+    );
 
     const fetchStores = async (city: string = "", district: string = "") => {
         try {
@@ -92,18 +97,48 @@ export function Store() {
                     ? new Date(store.createdAt).toISOString()
                     : null,
             }));
-            setStores(mappedStores);
-            setPagination({
-                ...pagination,
+
+            // Store all data for pagination
+            setAllStores(mappedStores);
+
+            // Update pagination info
+            const totalPages = Math.ceil(
+                mappedStores.length / pagination.pageSize
+            );
+            setPagination((prev) => ({
+                ...prev,
                 totalItems: mappedStores.length,
-                totalPages: Math.ceil(
-                    mappedStores.length / pagination.pageSize
-                ),
-            });
+                totalPages: totalPages,
+                currentPage: 1, // Reset to first page when fetching new data
+            }));
+
+            // Set current page data
+            updateDisplayedStores(mappedStores, 1, pagination.pageSize);
         } catch (error) {
             console.error("Lỗi API:", error);
             toast.error("Lỗi khi lấy danh sách cửa hàng");
             setStores([]);
+            setAllStores([]);
+        }
+    };
+
+    // Function to update displayed stores based on current page
+    const updateDisplayedStores = (
+        allData: Store[],
+        currentPage: number,
+        pageSize: number
+    ) => {
+        const startIndex = (currentPage - 1) * pageSize;
+        const endIndex = startIndex + pageSize;
+        const pageData = allData.slice(startIndex, endIndex);
+        setStores(pageData);
+    };
+
+    // Function to handle page navigation
+    const handlePageChange = (newPage: number) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            setPagination((prev) => ({ ...prev, currentPage: newPage }));
+            updateDisplayedStores(allStores, newPage, pagination.pageSize);
         }
     };
 
@@ -160,12 +195,16 @@ export function Store() {
     const uploadImage = async (imageFile: File): Promise<string | null> => {
         try {
             const formData = new FormData();
-            formData.append('file', imageFile);
-            const response = await api.post<string>(url.UPLOAD.IMAGE, formData, {
-                headers: {
-                    'Content-Type': 'multipart/form-data',
-                },
-            });
+            formData.append("file", imageFile);
+            const response = await api.post<string>(
+                url.UPLOAD.IMAGE,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                    },
+                }
+            );
             return response.data; // This will be the URL returned by the backend
         } catch (error: any) {
             toast.error(`Không thể tải ảnh lên: ${error.message}`);
@@ -185,7 +224,10 @@ export function Store() {
                     // Stop if image upload fails
                     return;
                 }
-            } else if (formData.storeImages === "" && currentStore?.storeImages) {
+            } else if (
+                formData.storeImages === "" &&
+                currentStore?.storeImages
+            ) {
                 // If user cleared the field, set URL to empty string
                 imageUrl = "";
             }
@@ -271,6 +313,7 @@ export function Store() {
     };
 
     const handleFilter = () => {
+        setPagination((prev) => ({ ...prev, currentPage: 1 })); // Reset to first page
         fetchStores(filterCity, filterDistrict);
     };
 
@@ -336,27 +379,43 @@ export function Store() {
 
                     {/* Store Table */}
                     <div className="bg-white dark:bg-gray-900 shadow-lg rounded-lg overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800"> {/* Added dark:divide-gray-800 */}
-                            <thead className="bg-gray-50 dark:bg-gray-900"> {/* Added dark:bg-gray-900 */}
+                        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-800">
+                            {" "}
+                            {/* Added dark:divide-gray-800 */}
+                            <thead className="bg-gray-50 dark:bg-gray-900">
+                                {" "}
+                                {/* Added dark:bg-gray-900 */}
                                 <tr className="dark:bg-gray-900">
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {" "}
+                                        {/* Adjusted dark:text-gray-300 */}
                                         ID
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {" "}
+                                        {/* Adjusted dark:text-gray-300 */}
                                         Tên cửa hàng
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {" "}
+                                        {/* Adjusted dark:text-gray-300 */}
                                         Thành phố
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {" "}
+                                        {/* Adjusted dark:text-gray-300 */}
                                         Quận/Huyện
                                     </th>
-                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider"> {/* Adjusted dark:text-gray-300 */}
+                                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                                        {" "}
+                                        {/* Adjusted dark:text-gray-300 */}
                                         Hành động
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800"> {/* Added dark:divide-gray-800 */}
+                            <tbody className="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-800">
+                                {" "}
+                                {/* Added dark:divide-gray-800 */}
                                 {stores.length === 0 ? (
                                     <tr>
                                         <td
@@ -372,16 +431,24 @@ export function Store() {
                                             key={store.storeId}
                                             className="hover:bg-gray-50 dark:hover:bg-gray-800" // Adjusted dark:hover:bg-gray-800
                                         >
-                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                {" "}
+                                                {/* Added dark:text-gray-100 */}
                                                 {store.storeId}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                {" "}
+                                                {/* Added dark:text-gray-100 */}
                                                 {store.storeName}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                {" "}
+                                                {/* Added dark:text-gray-100 */}
                                                 {store.cityProvince || "N/A"}
                                             </td>
-                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100"> {/* Added dark:text-gray-100 */}
+                                            <td className="px-6 py-4 whitespace-nowrap dark:text-gray-100">
+                                                {" "}
+                                                {/* Added dark:text-gray-100 */}
                                                 {store.district || "N/A"}
                                             </td>
                                             <td className="px-6 py-4 whitespace-nowrap space-x-3">
@@ -412,27 +479,92 @@ export function Store() {
                     </div>
 
                     {/* Pagination */}
-                    <div className="mt-4 flex justify-between items-center">
-                        <button
-                            onClick={() => handleFilter()}
-                            disabled={pagination.currentPage === 1}
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" // Added dark mode classes
-                        >
-                            Trang trước
-                        </button>
-                        <span className="text-gray-700 dark:text-gray-200"> {/* Added dark mode class */}
-                            Trang {pagination.currentPage} /{" "}
-                            {pagination.totalPages}
-                        </span>
-                        <button
-                            onClick={() => handleFilter()}
-                            disabled={
-                                pagination.currentPage === pagination.totalPages
-                            }
-                            className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600" // Added dark mode classes
-                        >
-                            Trang sau
-                        </button>
+                    <div className="mt-4 flex flex-col sm:flex-row justify-between items-center gap-4">
+                        <div className="flex items-center gap-2">
+                            <button
+                                onClick={() =>
+                                    handlePageChange(pagination.currentPage - 1)
+                                }
+                                disabled={pagination.currentPage === 1}
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Trang trước
+                            </button>
+
+                            {/* Page Numbers */}
+                            <div className="flex items-center gap-1">
+                                {Array.from(
+                                    {
+                                        length: Math.min(
+                                            5,
+                                            pagination.totalPages
+                                        ),
+                                    },
+                                    (_, i) => {
+                                        let pageNumber;
+                                        if (pagination.totalPages <= 5) {
+                                            pageNumber = i + 1;
+                                        } else if (
+                                            pagination.currentPage <= 3
+                                        ) {
+                                            pageNumber = i + 1;
+                                        } else if (
+                                            pagination.currentPage >=
+                                            pagination.totalPages - 2
+                                        ) {
+                                            pageNumber =
+                                                pagination.totalPages - 4 + i;
+                                        } else {
+                                            pageNumber =
+                                                pagination.currentPage - 2 + i;
+                                        }
+
+                                        return (
+                                            <button
+                                                key={pageNumber}
+                                                onClick={() =>
+                                                    handlePageChange(pageNumber)
+                                                }
+                                                className={`px-3 py-1 rounded-md text-sm ${
+                                                    pageNumber ===
+                                                    pagination.currentPage
+                                                        ? "bg-blue-500 text-white"
+                                                        : "bg-gray-200 text-gray-700 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                                                }`}
+                                            >
+                                                {pageNumber}
+                                            </button>
+                                        );
+                                    }
+                                )}
+                            </div>
+
+                            <button
+                                onClick={() =>
+                                    handlePageChange(pagination.currentPage + 1)
+                                }
+                                disabled={
+                                    pagination.currentPage ===
+                                    pagination.totalPages
+                                }
+                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-md disabled:opacity-50 hover:bg-gray-300 dark:bg-gray-700 dark:text-gray-200 dark:hover:bg-gray-600"
+                            >
+                                Trang sau
+                            </button>
+                        </div>
+
+                        <div className="text-sm text-gray-700 dark:text-gray-200">
+                            Hiển thị{" "}
+                            {(pagination.currentPage - 1) *
+                                pagination.pageSize +
+                                1}{" "}
+                            -{" "}
+                            {Math.min(
+                                pagination.currentPage * pagination.pageSize,
+                                pagination.totalItems
+                            )}{" "}
+                            của {pagination.totalItems} cửa hàng
+                        </div>
                     </div>
 
                     {/* Modal */}
@@ -458,7 +590,9 @@ export function Store() {
                                         <div className="flex flex-col md:flex-row gap-6 w-full">
                                             {/* Cột trái: hình ảnh */}
                                             <div className="md:w-1/3 w-full">
-                                                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1"> {/* Added dark:text-gray-200 */}
+                                                <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                                                    {" "}
+                                                    {/* Added dark:text-gray-200 */}
                                                     Hình ảnh
                                                 </Label>
                                                 {formData.storeImages ? (
@@ -477,7 +611,9 @@ export function Store() {
                                             {/* Cột phải: thông tin */}
                                             <div className="md:w-2/3 w-full grid grid-cols-1 md:grid-cols-2 gap-4">
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Tên cửa hàng
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -485,7 +621,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Số điện thoại
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -493,7 +631,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Thành phố
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -502,7 +642,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Quận/Huyện
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -511,7 +653,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Giờ mở cửa
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -520,7 +664,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div>
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Giờ đóng cửa
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -529,7 +675,9 @@ export function Store() {
                                                     </p>
                                                 </div>
                                                 <div className="md:col-span-2">
-                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                                    <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                        {" "}
+                                                        {/* Added dark:text-gray-200 */}
                                                         Mô tả
                                                     </Label>
                                                     <p className="mt-1 text-gray-900 dark:text-gray-100">
@@ -554,7 +702,9 @@ export function Store() {
                                         className="w-full grid grid-cols-1 md:grid-cols-3 gap-4"
                                     >
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Tên cửa hàng
                                             </Label>
                                             <input
@@ -567,7 +717,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Số điện thoại
                                             </Label>
                                             <input
@@ -580,7 +732,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Thành phố
                                             </Label>
                                             <input
@@ -593,7 +747,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Quận/Huyện
                                             </Label>
                                             <input
@@ -606,7 +762,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Giờ mở cửa
                                             </Label>
                                             <input
@@ -618,7 +776,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Giờ đóng cửa
                                             </Label>
                                             <input
@@ -630,7 +790,9 @@ export function Store() {
                                             />
                                         </div>
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Mô tả
                                             </Label>
                                             <textarea
@@ -643,38 +805,55 @@ export function Store() {
                                         </div>
                                         {/* NEW: File Input for storeImages */}
                                         <div>
-                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200"> {/* Added dark:text-gray-200 */}
+                                            <Label className="block text-sm font-medium text-gray-700 dark:text-gray-200">
+                                                {" "}
+                                                {/* Added dark:text-gray-200 */}
                                                 Hình ảnh cửa hàng
                                             </Label>
                                             <input
                                                 type="file"
                                                 name="storeImageFile" // Use a different name for file input
                                                 className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100"
-                                                onChange={handleStoreImageChange}
+                                                onChange={
+                                                    handleStoreImageChange
+                                                }
                                                 accept="image/*"
                                             />
-                                            {(storeImagePreview || formData.storeImages) && (
+                                            {(storeImagePreview ||
+                                                formData.storeImages) && (
                                                 <div className="mt-2">
                                                     <img
-                                                        src={storeImagePreview || `${url.BASE_IMAGES}${formData.storeImages}`}
+                                                        src={
+                                                            storeImagePreview ||
+                                                            `${url.BASE_IMAGES}${formData.storeImages}`
+                                                        }
                                                         alt="Xem trước ảnh"
                                                         className="w-24 h-24 object-cover rounded"
                                                     />
                                                 </div>
                                             )}
                                             {/* Optionally allow clearing the existing image by setting storeImages to empty string */}
-                                            {formData.storeImages && !selectedStoreImage && (
-                                                <button
-                                                    type="button"
-                                                    onClick={() => {
-                                                        setFormData(prev => ({ ...prev, storeImages: "" }));
-                                                        setStoreImagePreview(null);
-                                                    }}
-                                                    className="text-red-500 text-sm mt-1 hover:underline"
-                                                >
-                                                    Xóa ảnh hiện tại
-                                                </button>
-                                            )}
+                                            {formData.storeImages &&
+                                                !selectedStoreImage && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setFormData(
+                                                                (prev) => ({
+                                                                    ...prev,
+                                                                    storeImages:
+                                                                        "",
+                                                                })
+                                                            );
+                                                            setStoreImagePreview(
+                                                                null
+                                                            );
+                                                        }}
+                                                        className="text-red-500 text-sm mt-1 hover:underline"
+                                                    >
+                                                        Xóa ảnh hiện tại
+                                                    </button>
+                                                )}
                                         </div>
                                         <div className="col-span-full flex justify-end gap-3 mt-4">
                                             <button
