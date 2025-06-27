@@ -295,7 +295,7 @@ export default function UserInfoCard() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
         <div>
           <h4 className="text-lg font-semibold text-gray-800 dark:text-white/90 lg:mb-6">
-            Personal Information
+            Thông tin cá nhân
           </h4>
           <div className="flex flex-col items-center w-full gap-6 lg:flex-row lg:items-start">
             <div className="w-20 h-20 overflow-hidden border border-gray-200 rounded-full dark:border-gray-800">
@@ -314,7 +314,7 @@ export default function UserInfoCard() {
           <div className="mt-6 grid grid-cols-1 gap-4 lg:grid-cols-2 lg:gap-7 2xl:gap-x-32">
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Email address
+                Địa chỉ email
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {employee?.email || ""}
@@ -322,7 +322,7 @@ export default function UserInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Employee Code
+                Mã nhân viên
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {employee?.employeeCode || ""}
@@ -330,7 +330,7 @@ export default function UserInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Gender
+                Giới tính
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {employee?.gender || ""}
@@ -338,7 +338,7 @@ export default function UserInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Phone Number
+                Số điện thoại
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {employee?.phoneNumber || ""}
@@ -346,7 +346,7 @@ export default function UserInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Specialization
+                Chuyên môn
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {employee?.specialization || "Không có"}
@@ -354,15 +354,15 @@ export default function UserInfoCard() {
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Store
+                Cửa hàng
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                {employee?.store?.storeName || "Not available"}
+                {employee?.store?.storeName || "Chưa có thông tin"}
               </p>
             </div>
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Date of Birth
+                Ngày sinh
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
                 {formatDate(employee?.dateOfBirth)}
@@ -374,46 +374,45 @@ export default function UserInfoCard() {
         <div className="flex flex-row gap-3 lg:flex-row lg:items-end">
           <button
             onClick={handleOpenEditModal} // Sử dụng hàm mới để mở modal chỉnh sửa
-            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
-          >
-            <svg
-              className="fill-current"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
+            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"            >
+              <svg
+                className="fill-current"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.05470 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.0440 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.63590 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.12620 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
+                  fill=""
+                />
+              </svg>
+              Chỉnh sửa
+            </button>
+            <button
+              onClick={() => setIsPasswordModalOpen(true)}
+              className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
             >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M15.0911 2.78206C14.2125 1.90338 12.7878 1.90338 11.9092 2.78206L4.57524 10.116C4.26682 10.4244 4.05470 10.8158 3.96468 11.2426L3.31231 14.3352C3.25997 14.5833 3.33653 14.841 3.51583 15.0203C3.69512 15.1996 3.95286 15.2761 4.20096 15.2238L7.29355 14.5714C7.72031 14.4814 8.11172 14.2693 8.42013 13.9609L15.7541 6.62695C16.6327 5.74827 16.6327 4.32365 15.7541 3.44497L15.0911 2.78206ZM12.9698 3.84272C13.2627 3.54982 13.7376 3.54982 14.0305 3.84272L14.6934 4.50563C14.9863 4.79852 14.9863 5.2734 14.6934 5.56629L14.0440 6.21573L12.3204 4.49215L12.9698 3.84272ZM11.2597 5.55281L5.63590 11.1766C5.53309 11.2794 5.46238 11.4099 5.43238 11.5522L5.01758 13.5185L6.98394 13.1037C7.12620 13.0737 7.25666 13.003 7.35947 12.9002L12.9833 7.27639L11.2597 5.55281Z"
-                fill=""
-              />
-            </svg>
-            Edit
-          </button>
-          <button
-            onClick={() => setIsPasswordModalOpen(true)}
-            className="flex items-center justify-center gap-2 rounded-full border border-gray-300 bg-white px-4 py-3 text-sm font-medium text-gray-700 shadow-theme-xs hover:bg-gray-50 hover:text-gray-800 dark:border-gray-700 dark:bg-gray-800 dark:text-gray-400 dark:hover:bg-white/[0.03] dark:hover:text-gray-200"
-          >
-            <svg
-              className="fill-current"
-              width="18"
-              height="18"
-              viewBox="0 0 18 18"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                fillRule="evenodd"
-                clipRule="evenodd"
-                d="M9 2.25C6.92893 2.25 5.25 3.92893 5.25 6V7.5H4.5C3.67157 7.5 3 8.17157 3 9V15C3 15.8284 3.67157 16.5 4.5 16.5H13.5C14.3284 16.5 15 15.8284 15 15V9C15 8.17157 14.3284 7.5 13.5 7.5H12.75V6C12.75 3.92893 11.0711 2.25 9 2.25ZM6.75 6V7.5H11.25V6C11.25 4.75736 10.2426 3.75 9 3.75C7.75736 3.75 6.75 4.75736 6.75 6ZM9 12.75C9.62132 12.75 10.125 12.2463 10.125 11.625C10.125 11.0037 9.62132 10.5 9 10.5C8.37868 10.5 7.875 11.0037 7.875 11.625C7.875 12.2463 8.37868 12.75 9 12.75Z"
-                fill=""
-              />
-            </svg>
-            Change Password
-          </button>
+              <svg
+                className="fill-current"
+                width="18"
+                height="18"
+                viewBox="0 0 18 18"
+                fill="none"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  fillRule="evenodd"
+                  clipRule="evenodd"
+                  d="M9 2.25C6.92893 2.25 5.25 3.92893 5.25 6V7.5H4.5C3.67157 7.5 3 8.17157 3 9V15C3 15.8284 3.67157 16.5 4.5 16.5H13.5C14.3284 16.5 15 15.8284 15 15V9C15 8.17157 14.3284 7.5 13.5 7.5H12.75V6C12.75 3.92893 11.0711 2.25 9 2.25ZM6.75 6V7.5H11.25V6C11.25 4.75736 10.2426 3.75 9 3.75C7.75736 3.75 6.75 4.75736 6.75 6ZM9 12.75C9.62132 12.75 10.125 12.2463 10.125 11.625C10.125 11.0037 9.62132 10.5 9 10.5C8.37868 10.5 7.875 11.0037 7.875 11.625C7.875 12.2463 8.37868 12.75 9 12.75Z"
+                  fill=""
+                />
+              </svg>
+              Đổi mật khẩu
+            </button>
         </div>
       </div>
 
@@ -422,17 +421,17 @@ export default function UserInfoCard() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Edit Personal Information
+              Chỉnh sửa thông tin cá nhân
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your details to keep your profile up-to-date.
+              Cập nhật thông tin của bạn để giữ hồ sơ luôn mới nhất.
             </p>
           </div>
           <form className="flex flex-col">
             <div className="custom-scrollbar h-[450px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Full Name</Label>
+                  <Label>Họ và tên</Label>
                   <Input
                     type="text"
                     name="fullName"
@@ -450,7 +449,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Employee Code</Label>
+                  <Label>Mã nhân viên</Label>
                   <Input
                     type="text"
                     name="employeeCode"
@@ -459,7 +458,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Gender</Label>
+                  <Label>Giới tính</Label>
                   <Input
                     type="text"
                     name="gender"
@@ -468,7 +467,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Phone Number</Label>
+                  <Label>Số điện thoại</Label>
                   <Input
                     type="text"
                     name="phoneNumber"
@@ -477,7 +476,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Date of Birth</Label>
+                  <Label>Ngày sinh</Label>
                   <Input
                     type="date"
                     name="dateOfBirth"
@@ -486,7 +485,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Avatar</Label> {/* Sửa label từ "Avatar URL" sang "Avatar" */}
+                  <Label>Ảnh đại diện</Label> {/* Sửa label từ "Avatar URL" sang "Avatar" */}
                   <input
                     type="file" // Sửa type từ "text" sang "file"
                     name="avatarFile" // Đặt tên khác để tránh nhầm lẫn với avatarUrl string
@@ -518,7 +517,7 @@ export default function UserInfoCard() {
                   )}
                 </div>
                 <div>
-                  <Label>Specialization</Label>
+                  <Label>Chuyên môn</Label>
                   <Input
                     type="text"
                     name="specialization"
@@ -531,10 +530,10 @@ export default function UserInfoCard() {
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={closeModal}>
-                Close
+                Đóng
               </Button>
               <Button size="sm" onClick={handleSaveProfile}>
-                Save Changes
+                Lưu thay đổi
               </Button>
             </div>
           </form>
@@ -546,17 +545,17 @@ export default function UserInfoCard() {
         <div className="no-scrollbar relative w-full max-w-[700px] overflow-y-auto rounded-3xl bg-white p-4 dark:bg-gray-900 lg:p-11">
           <div className="px-2 pr-14">
             <h4 className="mb-2 text-2xl font-semibold text-gray-800 dark:text-white/90">
-              Change Password
+              Đổi mật khẩu
             </h4>
             <p className="mb-6 text-sm text-gray-500 dark:text-gray-400 lg:mb-7">
-              Update your password to keep your account secure.
+              Cập nhật mật khẩu để bảo mật tài khoản của bạn.
             </p>
           </div>
           <form onSubmit={handleSavePassword} className="flex flex-col">
             <div className="custom-scrollbar h-[300px] overflow-y-auto px-2 pb-3">
               <div className="grid grid-cols-1 gap-x-6 gap-y-5 lg:grid-cols-2">
                 <div>
-                  <Label>Current Password</Label>
+                  <Label>Mật khẩu hiện tại</Label>
                   <Input
                     type="password"
                     name="currentPassword"
@@ -565,7 +564,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>New Password</Label>
+                  <Label>Mật khẩu mới</Label>
                   <Input
                     type="password"
                     name="newPassword"
@@ -574,7 +573,7 @@ export default function UserInfoCard() {
                   />
                 </div>
                 <div>
-                  <Label>Confirm New Password</Label>
+                  <Label>Xác nhận mật khẩu mới</Label>
                   <Input
                     type="password"
                     name="confirmPassword"
@@ -586,10 +585,10 @@ export default function UserInfoCard() {
             </div>
             <div className="flex items-center gap-3 px-2 mt-6 lg:justify-end">
               <Button size="sm" variant="outline" onClick={() => setIsPasswordModalOpen(false)}>
-                Close
+                Đóng
               </Button>
               <Button size="sm" type="submit">
-                Save Changes
+                Lưu thay đổi
               </Button>
             </div>
           </form>
