@@ -120,7 +120,7 @@ const navItems: NavItem[] = [
         path: "/customer",
         roles: ["ROLE_ADMIN"],
     },
-     {
+    {
         icon: <CalenderIcon />,
         name: "Lời góp ý",
         path: "/feedback",
@@ -399,7 +399,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
                         : "justify-start"
                 }`}
             >
-                <Link to="/homes">
+                <Link to="/">
                     {isExpanded || isHovered || isMobileOpen ? (
                         <>
                             <img
