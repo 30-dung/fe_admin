@@ -399,7 +399,7 @@ const AppSidebar: React.FC<AppSidebarProps> = () => {
                         : "justify-start"
                 }`}
             >
-                <Link to="/homes">
+                <Link to="/">
                     {isExpanded || isHovered || isMobileOpen ? (
                         <>
                             <img
